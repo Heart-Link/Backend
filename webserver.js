@@ -19,7 +19,7 @@ var port = process.env.PORT || 8080;
 const databaseURL = 'seniordesign.ceweg4niv3za.us-east-1.rds.amazonaws.com';
 
 
-var bae = new Pool({
+var pgbae = new Pool({
 	user: 'sagar',
 	database: 'patientNetwork',
 	password: 'mistryohsd',
@@ -28,6 +28,7 @@ var bae = new Pool({
 	max: 10,
 	idleTimeoutMillis: 30000
 });
+
 
 
 
@@ -95,7 +96,7 @@ router.post('/push', function(req,res){
 //-------------------------------------------|
 
 router.get('/patients',function(req,res){  // Get list of Patients
-	bae.connect(function(err, client, done){
+	pgbae.connect(function(err, client, done){
 		if(err){
 			return console.error('error connecting client to pool: '+ err);
 		}
@@ -203,7 +204,7 @@ router.delete('/messages/id',function(req,res){
 //-------------------------------------------|
 
 router.post('/network/create', function(req,res){
-
+ // Not sure if needed because of networking
 });
 
 
