@@ -1,11 +1,14 @@
-var express = require('express');
-var bodyparser = require('body-parser');
-var bcrypt = require('bcrypt');
+const express = require('express');
+const bodyparser = require('body-parser');
+const bcrypt = require('bcrypt');
+const circularSalt = 10;
 const pg = require('pg');
 const Pool = require('pg').Pool;
 const url = require('url');
-var app = express(); 
-var router = express.Router();
+const moment = require('moment'); 
+const app = express(); 
+const router = express.Router();
+const async = require('async');
 
 app.use(bodyparser.urlencoded({ extended: true}));
 app.use(bodyparser.json());
@@ -14,11 +17,9 @@ var port = process.env.PORT || 8080;
 
 // ------------- include Models -------------------
 
-//const patient = require('./models/patientSchema.js'); 
+const newPatient = require('./models/patientSchema.js'); 
 
 const databaseURL = 'seniordesign.ceweg4niv3za.us-east-1.rds.amazonaws.com';
-
-
 var pgbae = new Pool({
 	user: 'sagar',
 	database: 'patientNetwork',
@@ -28,8 +29,6 @@ var pgbae = new Pool({
 	max: 10,
 	idleTimeoutMillis: 30000
 });
-
-
 
 
 router.get('/',function(req,res){
@@ -104,65 +103,80 @@ router.get('/patients',function(req,res){  // Get list of Patients
 		client.query(statement,function(err,result){
 			if(err){
 				console.log(err);
-			}
-			else{
-				console.log("we gucci mane"); 
-			}
+			};
 		});
 
 	});
 });
 
-router.get('patients/id',function(req,res){ // get Individual Patient Information
 
+/* 
+step 1: make conversation, generate patientID and save the convoID
+step 2: make patient and input information
+step 3: save all 
+step 4: pray 
+
+Notes: GenID is for messages, using EMRID for all patient ID needs
+*/
+
+router.post('/patients/create', function(req,res){
+	console.log(req.body);
+	var sugar = bcrypt.genSaltSync(circularSalt);
+	var genID = bcrypt.hashSync(req.body.emrid, sugar); // Used for messages
+	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.emrid+"','"+req.body.providerid+"','"+req.body.managerid+"')";
+	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, vitalsweight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, steps, exercisetime, gameification,providerid,networkid) VALUES " +
+				"('" + req.body.firstname + 
+				"','" +req.body.lastname +
+				"','" +req.body.vitalsbph +
+				"','" +req.body.vitalsbpl +
+				"','" +req.body.vitalsweight +
+				"','" +req.body.vitalsalcohol +
+				"','" +req.body.status +
+				"','" +req.body.managerid +
+				"','" +genID +
+				"','" +req.body.emrid +
+				"','" +req.body.patientEmail + 
+				"','" +req.body.gender +
+				"','" +req.body.steps +
+				"','" +req.body.exercisetime +
+				"','0','" + req.body.providerid +
+				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC')";
+	console.log(convo);
+	console.log(statement);
+
+	pgbae.connect(function(err,client,done){
+		if(err){
+			return console.error('error connecting client to pool: '+ err);
+		}
+		client.query(convo, function(err,result){ // SEND create Message Command
+			if(err){
+				console.log('error: '+err);
+			}
+			else{
+				console.log('success in conversation creation'); 
+			}
+		});
+		client.query(statement,function(err,result){ // send Create Patient Command
+			if(err){
+				console.log('error: '+err);
+			}
+			else{
+				console.log('success in Patient Creation');
+			}
+		});
+	});
+});
+
+router.get('patients:id',function(req,res){ // get Individual Patient Information
+	var patientID = req.query.id; //EMRID
+
+	var results = pgbae.query('SELECT * FROM public.patients WHERE emrid == '+patientID+"'");
+	console.log(results);
 });
 
 router.post('/patients/id',function(req,res){ // Update individual patient information
 
 });
-
-// router.post('/patients/record',function(req,res){ // Patient Record Submission
-// 	var person = new patient({ 
-// 		firstName : req.body.firstName, 
-// 		lastName : req.body.lastName, 
-// 		foodServings :{
-// 			redMeat : req.body.redMeat,
-// 			whiteMeat : req.body.whiteMeat,
-// 			fish : req.body.fish, 
-// 			vegetables : req.body.vegetables, 
-// 			fruit : req.body.fruit,
-// 			grain : req.body.grain,
-// 			sweets : req.body.sweets,
-// 			soda : req.body.soda,
-// 			water : req.body.water
-// 		},
-// 		sexualActivity : req.body.sex,
-// 		stressLevel : req.body.stress, 
-// 		recommendedVitals : {
-// 			bloodPressureHigh : req.body.bpHigh,
-// 			bloodPressureLow : req.body.bpLow,
-// 			weight : req.body.weight,
-// 			alcoholIntake : req.body.alcohol,
-// 			smoke : req.body.smoke
-// 		},
-// 		status : req.body.status // <----- What is this? 
-// 		providerID : req.body.providerID,
-// 		managerID : req.body.managerID, 
-// 		conversationID :  // <---- Add SQL DB ID
-// 		healthFlag : req.body.healthFlag // <---- what is this?
-// 	});
-// 	person.save(function(err,res){
-// 		if(err){
-// 			console.log(err);
-// 		}
-// 	});
-
-
-// 	// Add create Message with Provider, manager and patient. 
-
-// 	//
-// });
-
 
 router.delete('/patients/delete/id',function(req,res){ // delete patient number ID
 
@@ -204,8 +218,25 @@ router.delete('/messages/id',function(req,res){
 //-------------------------------------------|
 
 router.post('/network/create', function(req,res){
- // Not sure if needed because of networking
+	bcrypt.genSalt(circularSalt, function(err, salt) {
+    bcrypt.hash(req.body.networkname, salt, function(err, hash) {
+         pgbae.connect(function(err,client,done){
+         	if(err){
+         		console.log('cantconnect: '+err);
+         	}
+        	else{
+        		console.log('worked');
+        	}
+        	client.query("INSERT INTO public.network (networkid, networkname) VALUES ('"+hash+"','"+req.body.networkname+"')");
+        	done();
+
+        });
+
+    });
 });
+});
+
+
 
 
 //Register routes with a prefix for the API 

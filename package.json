@@ -18,6 +18,7 @@
   "homepage": "https://github.com/smistry1121/OHSD#readme",
   "dependencies": {
     "bcrypt": "^0.8.7",
+    "moment": "^2.14.1",
     "pg": "^6.1.0",
     "postgresql": "0.0.1",
     "sql": "^0.70.1"
