@@ -3,7 +3,7 @@ const bodyparser = require('body-parser');
 const bcrypt = require('bcrypt');
 const circularSalt = 10;
 const pg = require('pg');
-const Pool = require('pg').Pool;
+const Pool = require('pg').Pool; 
 const url = require('url');
 const moment = require('moment'); 
 const app = express(); 
@@ -17,7 +17,7 @@ var port = process.env.PORT || 8080;
 
 // ------------- include Models -------------------
 
-const newPatient = require('./models/patientSchema.js'); 
+const patientEntry = require('./models/patientSchema.js'); 
 
 const databaseURL = 'seniordesign.ceweg4niv3za.us-east-1.rds.amazonaws.com';
 var pgbae = new Pool({
@@ -67,26 +67,6 @@ router.get('/user/me',function(req,res){  // validate Session Token for web serv
 });
 
 
-
-//-------------------------------------------|
-// Helper Routes							 |
-// 											 |
-// 											 |
-// 											 |
-//-------------------------------------------|
-
-router.get('/user/managers',function(req,res){
-
-});
-
-router.get('/user/doctors',function(req,res){
-
-});
-
-router.post('/push', function(req,res){
-
-});
-
 //-------------------------------------------|
 // Patient System Routes					 |
 // 											 |
@@ -99,7 +79,7 @@ router.get('/patients',function(req,res){  // Get list of Patients
 		if(err){
 			return console.error('error connecting client to pool: '+ err);
 		}
-		var statement = "INSERT INTO public.network (networkName) VALUES ('Orlando Health')";
+		var statement = "SELECT * FROM public.network (networkName) VALUES ('Orlando Health')";
 		client.query(statement,function(err,result){
 			if(err){
 				console.log(err);
@@ -169,7 +149,6 @@ router.post('/patients/create', function(req,res){
 
 router.get('patients:id',function(req,res){ // get Individual Patient Information
 	var patientID = req.query.id; //EMRID
-
 	var results = pgbae.query('SELECT * FROM public.patients WHERE emrid == '+patientID+"'");
 	console.log(results);
 });
@@ -203,7 +182,33 @@ router.get('/messages/conversationid',function(req,res){
 });
 
 router.post('/messages/id',function(req,res){
+ 	/* 
+ 	1. get Message and messenger ID and timestamp 
+ 	2. create Json Entry
+ 	3. find message row from PostgreSQL by using Patient ID in messages Table
+ 	4. append json entry */
 
+ 	var json = {
+ 		"messenger": req.body.messengerID,
+ 		"message": req.body.message, 
+ 		"time": 'NOW'
+ 	}
+
+ 	pgbae.connect(function(err, client, done){
+ 		if(err){
+ 			console.log('message Post Err: '+err); 
+ 		}
+ 		var statement = "INSERT INTO public.messages (messageInformation) VALUES ('"+JSON.stringify(json)+"') WHERE patientid ='"+ req.body.patientID+ "'";
+ 		console.log(statement);
+ 		client.query(statement, function(err,result){
+ 			if(err){
+ 				console.log(err); 
+ 			}
+ 			else{
+ 				console.log('Message Successfully Appended'); 
+ 			}
+ 		});
+ 	});
 });
 
 router.delete('/messages/id',function(req,res){
@@ -218,22 +223,20 @@ router.delete('/messages/id',function(req,res){
 //-------------------------------------------|
 
 router.post('/network/create', function(req,res){
-	bcrypt.genSalt(circularSalt, function(err, salt) {
-    bcrypt.hash(req.body.networkname, salt, function(err, hash) {
-         pgbae.connect(function(err,client,done){
-         	if(err){
-         		console.log('cantconnect: '+err);
-         	}
-        	else{
-        		console.log('worked');
-        	}
-        	client.query("INSERT INTO public.network (networkid, networkname) VALUES ('"+hash+"','"+req.body.networkname+"')");
-        	done();
-
-        });
-
-    });
-});
+		bcrypt.genSalt(circularSalt, function(err, salt) {
+	    bcrypt.hash(req.body.networkname, salt, function(err, hash) {
+	         pgbae.connect(function(err,client,done){
+	         	if(err){
+	         		console.log('cantconnect: '+err);
+	         	}
+	        	else{
+	        		console.log('worked');
+	        	}
+	        	client.query("INSERT INTO public.network (networkid, networkname) VALUES ('"+hash+"','"+req.body.networkname+"')");
+	        	done();
+	        });
+	    });
+	});
 });
 
 
