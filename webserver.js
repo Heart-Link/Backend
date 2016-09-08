@@ -157,18 +157,6 @@ router.post('/patients/id',function(req,res){ // Update individual patient infor
 
 });
 
-router.delete('/patients/delete/id',function(req,res){ // delete patient number ID
-
-});
-
-router.post('/patients/notes/id',function(req,res){ // update notes chart 
-
-});
-
-router.get('/patients/collect', function(req,res){ // get new data from devices
-
-});
-
 
 //-------------------------------------------|
 // Message System Routes					 |
@@ -177,37 +165,41 @@ router.get('/patients/collect', function(req,res){ // get new data from devices
 // 											 |
 //-------------------------------------------|
 
-router.get('/messages/conversationid',function(req,res){
-
+router.get('/messages:id',function(req,res){
+	var conversationID; 
+	console.log(req.query.id);
+	/*  1. get PatientID (EMRID).
+		2. from PateientID, get conversationID, 
+		3. Parse messages by timestamp given conversationID
+		4. store convo ID for any message posts */ 
+	pgbae.connect(function(err,client,done){
+		if(err){
+			console.log('Message GET Error: '+ err);
+		}
+		client.query('SELECT * FROM public.patients WHERE emrid = ($1)',[req.query.id], function(err,results){
+				console.log(results); 
+		});
+	});
 });
 
 router.post('/messages/id',function(req,res){
  	/* 
- 	1. get Message and messenger ID and timestamp 
- 	2. create Json Entry
- 	3. find message row from PostgreSQL by using Patient ID in messages Table
- 	4. append json entry */
-
- 	var json = {
- 		"messenger": req.body.messengerID,
- 		"message": req.body.message, 
- 		"time": 'NOW'
- 	}
+ 	1. get Message , messenger ID and conversationID
+ 	2. Use ConversationID as connecting Key 
+ 	3. Post message */
+ 	var message = req.body.message,
+ 		messenger = req.body.messengerID, // Either Doctor, Patient, or Manager.
+ 		conversationID = req.body.conversationid; 
 
  	pgbae.connect(function(err, client, done){
  		if(err){
  			console.log('message Post Err: '+err); 
- 		}
- 		var statement = "INSERT INTO public.messages (messageInformation) VALUES ('"+JSON.stringify(json)+"') WHERE patientid ='"+ req.body.patientID+ "'";
- 		console.log(statement);
- 		client.query(statement, function(err,result){
- 			if(err){
- 				console.log(err); 
- 			}
- 			else{
- 				console.log('Message Successfully Appended'); 
- 			}
+ 		}client.query({
+ 			text: "INSERT INTO public.messagecontent (convoid,message,messengerid,timestamp) VALUES ($1, $2, $3, $4)",
+ 			values: [conversationID, message, messenger, moment().format()]
  		});
+ 		console.log('message Posted');
+ 		res.sendStatus(200);
  	});
 });
 
