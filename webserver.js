@@ -74,16 +74,14 @@ router.get('/user/me',function(req,res){  // validate Session Token for web serv
 // 											 |
 //-------------------------------------------|
 
-router.get('/patients',function(req,res){  // Get list of Patients
+router.get('/patientList:id',function(req,res){  // Get list of Patients
 	pgbae.connect(function(err, client, done){
 		if(err){
 			return console.error('error connecting client to pool: '+ err);
 		}
-		var statement = "SELECT * FROM public.network (networkName) VALUES ('Orlando Health')";
-		client.query(statement,function(err,result){
-			if(err){
-				console.log(err);
-			};
+		client.query('SELECT * FROM public.patients WHERE managerid = ($1)',[req.query.id], function(err,results){
+				res.send(results);
+
 		});
 
 	});
@@ -100,7 +98,6 @@ Notes: GenID is for messages, using EMRID for all patient ID needs
 */
 
 router.post('/patients/create', function(req,res){
-	console.log(req.body);
 	var sugar = bcrypt.genSaltSync(circularSalt);
 	var genID = bcrypt.hashSync(req.body.emrid, sugar); // Used for messages
 	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.emrid+"','"+req.body.providerid+"','"+req.body.managerid+"')";
@@ -121,13 +118,14 @@ router.post('/patients/create', function(req,res){
 				"','" +req.body.exercisetime +
 				"','0','" + req.body.providerid +
 				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC')";
-	console.log(convo);
-	console.log(statement);
 
 	pgbae.connect(function(err,client,done){
 		if(err){
 			return console.error('error connecting client to pool: '+ err);
 		}
+		var providerName,
+			mangerName;
+
 		client.query(convo, function(err,result){ // SEND create Message Command
 			if(err){
 				console.log('error: '+err);
@@ -147,15 +145,13 @@ router.post('/patients/create', function(req,res){
 	});
 });
 
-router.get('patients:id',function(req,res){ // get Individual Patient Information
+router.get('patients/individual:id',function(req,res){ // get Individual Patient Information
 	var patientID = req.query.id; //EMRID
 	var results = pgbae.query('SELECT * FROM public.patients WHERE emrid == '+patientID+"'");
 	console.log(results);
 });
 
-router.post('/patients/id',function(req,res){ // Update individual patient information
 
-});
 
 
 //-------------------------------------------|
@@ -165,22 +161,6 @@ router.post('/patients/id',function(req,res){ // Update individual patient infor
 // 											 |
 //-------------------------------------------|
 
-router.get('/messages:id',function(req,res){
-	var conversationID; 
-	console.log(req.query.id);
-	/*  1. get PatientID (EMRID).
-		2. from PateientID, get conversationID, 
-		3. Parse messages by timestamp given conversationID
-		4. store convo ID for any message posts */ 
-	pgbae.connect(function(err,client,done){
-		if(err){
-			console.log('Message GET Error: '+ err);
-		}
-		client.query('SELECT * FROM public.patients WHERE emrid = ($1)',[req.query.id], function(err,results){
-				console.log(results); 
-		});
-	});
-});
 
 router.post('/messages/id',function(req,res){
  	/* 
@@ -203,10 +183,9 @@ router.post('/messages/id',function(req,res){
  	});
 });
 
-router.delete('/messages/id',function(req,res){
+router.get('/messages:id',function(req,res){
 
 });
-
 //-------------------------------------------|
 // patient network stuff 					 |
 // 											 |
