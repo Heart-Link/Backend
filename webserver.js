@@ -204,13 +204,12 @@ router.get('/messages:patient',function(req,res){
 			var statement = "SELECT convoid FROM public.messages WHERE patientid ="+req.query.patient+"::text";
 
 			client.query(statement,function(err,res){
-				conversationID = res.rows[0].convoid;
-			});
-			console.log(conversationID);
-			client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[conversationID],function(err,res){
-				console.log(res);
-			})
+				console.log(res.rows[0].convoid);
+				client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[res.rows[0].convoid],function(err,data){
+					res.send(data);
+				 });
 		});
+	});
 });
 //-------------------------------------------|
 // patient network stuff 					 |
