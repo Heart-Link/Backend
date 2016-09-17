@@ -21,6 +21,7 @@
     "bcrypt": "^0.8.7",
     "body-parser": "",
     "express": "^4.14.0",
+    "jsonwebtoken": "^7.1.9",
     "moment": "^2.14.1",
     "pg": "^6.1.0",
     "postgresql": "0.0.1",
