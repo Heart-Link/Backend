@@ -10,7 +10,7 @@ const app = express();
 const router = express.Router();
 const async = require('async');
 const config = require('./config');
-const jwt = require('jsonwebtoken');
+//const jwt = require('jsonwebtoken');
 
 app.use(bodyparser.urlencoded({ extended: true}));
 app.use(bodyparser.json());
