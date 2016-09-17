@@ -9,9 +9,13 @@ const moment = require('moment');
 const app = express(); 
 const router = express.Router();
 const async = require('async');
+const config = require('./config');
+const jwt = require('jsonwebtoken');
 
 app.use(bodyparser.urlencoded({ extended: true}));
 app.use(bodyparser.json());
+app.set('secret',config.secret);
+
 var port = process.env.PORT || 8080;
 
 app.use('/',function(req,res,next){
@@ -35,9 +39,8 @@ var pgbae = new Pool({
 	idleTimeoutMillis: 30000
 });
 
-
 router.get('/',function(req,res){
-	res.json({ message: 'test Message'});
+	res.json({ message: 'API Access Granted'});
 });
 
 //-------------------------------------------|
@@ -47,29 +50,54 @@ router.get('/',function(req,res){
 //-------------------------------------------|
 
 
-app.get('/login:email:password', function(req,res){
+router.get('/login:email:password', function(req,res){
 	var userEmail = req.query.email;
 	var userPW = req.query.password;
 
 	person.findOne({ email: userEmail },function(err,record){
 		 bcrypt.compare(userPW, record.password, function(err,success){
 		 	if(success){
-		 		console.log("Access Granted");
+		 		var token = jwt.sign(record, app.get('secret'),{
+		 			expiresInMinutes: 1440
+		 		});
+		 		res.json({
+		 			success: true,
+		 			token: token
+		 		});
 		 	}
 		 	else{
-		 		console.log(err);
+		 		console.log('Login error: '+err);
 		 	}
 		 })
 	});
 });
 
-router.get('/logout', function(req,res){
+app.get('/logout', function(req,res){
 
 });
 
-router.get('/user/me',function(req,res){  // validate Session Token for web services
-	
-});
+// router.use(function(req,res,next){  // validate Session Token for web services
+// 	var token = req.body.token || req.query.token || req.headers['x-access-token'];
+
+// 	if(token){
+// 		jwt.verify(token, app.get('secret'),function(err,decoded){
+// 			if(err){
+// 				return res.json({
+// 					success: false,
+// 					message: 'Failed to Authenticate'
+// 				});
+// 			}else{
+// 				req.decoded = decoded;
+// 				next();
+// 			}
+// 		})
+// 	}else{
+// 		return res.status(403).send({
+// 			success: false, 
+// 			message: 'No Token provided.'
+// 		});
+// 	}
+// });
 
 
 //-------------------------------------------|
@@ -86,14 +114,9 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients
 		}
 		client.query('SELECT * FROM public.patients WHERE managerid = ($1)',[req.query.id], function(err,results){
 				res.send(results);
-
 		});
-
 	});
 });
-
-
-
 
 router.post('/patients/create', function(req,res){
 	/* 
@@ -160,14 +183,13 @@ router.get('patients/individual:id',function(req,res){ // get Individual Patient
 });
 
 
-
-
 //-------------------------------------------|
 // Message System Routes					 |
-// 											 |
-// 											 |
-// 											 |
 //-------------------------------------------|
+
+router.post('/messages/patient/send',function(req,res){
+	res.status(200).json(req.body);
+})
 
 
 router.post('/messages/id',function(req,res){
@@ -213,9 +235,6 @@ router.get('/messages:patient',function(req,res){
 });
 //-------------------------------------------|
 // patient network stuff 					 |
-// 											 |
-// 											 |
-// 											 |
 //-------------------------------------------|
 
 router.post('/network/create', function(req,res){
