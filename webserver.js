@@ -119,6 +119,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 });
 
 router.post('/patient/submit', function(req,res){
+	console.log(req.body);
 	res.json(req.body);
 })
 
