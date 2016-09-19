@@ -107,16 +107,20 @@ app.get('/logout', function(req,res){
 // 											 |
 //-------------------------------------------|
 
-router.get('/patientList:id',function(req,res){  // Get list of Patients
+router.get('/patientList:id',function(req,res){  // Get list of Patients based off the user ID (either Patient or Manager)
 	pgbae.connect(function(err, client, done){
 		if(err){
 			return console.error('error connecting client to pool: '+ err);
 		}
 		client.query('SELECT * FROM public.patients WHERE managerid = ($1)',[req.query.id], function(err,results){
-				res.send(results);
+				res.json(config.sortPatients(results));
 		});
 	});
 });
+
+router.post('/patient/submit', function(req,res){
+	res.json(req.body);
+})
 
 router.post('/patients/create', function(req,res){
 	/* 
