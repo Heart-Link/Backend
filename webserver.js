@@ -40,7 +40,7 @@ var pgbae = new Pool({
 });
 
 router.get('/',function(req,res){
-	res.json({ message: 'API Access Granted'});
+	res.json({ message: 'API Granted'});
 });
 
 //-------------------------------------------|
