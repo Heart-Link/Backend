@@ -2,6 +2,7 @@ const express = require('express');
 const bodyparser = require('body-parser');
 const bcrypt = require('bcrypt');
 const circularSalt = 10;
+const mongoose = require('mongoose'); 
 const pg = require('pg');
 const Pool = require('pg').Pool; 
 const url = require('url');
@@ -26,10 +27,10 @@ app.use('/',function(req,res,next){
 
 // ------------- include Models -------------------
 
-const patientEntry = require('./models/patientSchema.js'); 
+const patientEntry = require('./models/patientEntry.js'); 
 
 const databaseURL = 'seniordesign.ceweg4niv3za.us-east-1.rds.amazonaws.com';
-var pgbae = new Pool({
+const pgbae = new Pool({
 	user: 'sagar',
 	database: 'patientNetwork',
 	password: 'mistryohsd',
@@ -38,7 +39,7 @@ var pgbae = new Pool({
 	max: 10,
 	idleTimeoutMillis: 30000
 });
-
+mongoose.connect('mongodb://mongobot:heartlink@ec2-54-163-104-129.compute-1.amazonaws.com:27017/heartlink');
 router.get('/',function(req,res){
 	res.json({ message: 'API Granted'});
 });
@@ -119,8 +120,29 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 });
 
 router.post('/patient/submit', function(req,res){
-	console.log(req.body);
-	res.json(req.body);
+	var entry = new patientEntry({
+		patientID : req.body.patientID,
+		recommendedVitals:{
+			bpHigh: req.body.bpHigh,
+			bpLow:req.body.bpLow,
+			weight:req.body.weight,
+			exerciseTime:req.body.exerciseTime,
+			alcoholIntake:req.body.booze,
+			steps:req.body.steps,
+			averageHR:req.body.hr,
+			stressLevel:req.body.stressLevel
+		}
+	})
+	entry.save(function(err){
+		if(err) throw err;
+		console.log('Patient Entry submitted');
+	})
+	pgbae.connect(function(err,client,done){
+		client.query('UPDATE public.patients SET gameification = gameification + 1 WHERE emrid = ($1)',[req.body.patientID],function(err,res){
+			if(err) throw err;
+			console.log(res);
+		});
+	});
 })
 
 router.post('/patients/create', function(req,res){
@@ -192,12 +214,12 @@ router.get('patients/individual:id',function(req,res){ // get Individual Patient
 // Message System Routes					 |
 //-------------------------------------------|
 
-router.post('/messages/patient/send',function(req,res){
-	res.status(200).json(req.body);
-})
+router.post('/messages/patient/send',function(req,res){ //iPhone app appending message to patient.
+	
+});
 
 
-router.post('/messages/id',function(req,res){
+router.post('/messages/id',function(req,res){  // Appending messages to a converstaion
  	/* 
  	1. get Message , messenger ID and conversationID
  	2. Use ConversationID as connecting Key 
@@ -218,29 +240,41 @@ router.post('/messages/id',function(req,res){
  	});
 });
  
-router.get('/messages:patient',function(req,res){
+router.get('/messages:patient',function(req,res){ // Get a conversation with a patient
 		/* 1. Use EMR ID (passed by Req.query) to get conversation ID from public.messages
 			2. Get all messages from public.messagecontent with conversationID
 			3. SORT BY MOST RECENT DATE */
-		console.log(req.query.patient);
-		pgbae.connect(function(err,client,done){
-			if(err){
-				console.log('get Message error: '+ err)
-			}
-			var conversationID; 
-			var statement = "SELECT convoid FROM public.messages WHERE patientid ="+req.query.patient+"::text";
+		async.waterfall(
+			[
+				function getConversationID(callback){
+						pgbae.connect(function(err,client,done){
+							if(err){
+								console.log('get Message error: '+ err)
+							}
+							var conversationID; 
+							var statement = "SELECT * FROM public.messages WHERE patientid ="+req.query.patient+"::text";
 
-			client.query(statement,function(err,res){
-				console.log(res.rows[0].convoid);
-				client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[res.rows[0].convoid],function(err,data){
-					res.send(data);
-				 });
-		});
-	});
+							client.query(statement,function(err,res){
+								return callback(null,res.rows[0].convoid,res.rows[0]);
+							});
+						});
+					},
+				function getMessages(convoID,callback){
+		 			 	pgbae.connect(function(err,client,done){
+						 	if(err){
+						 		console.log('get Message error: '+ err)
+						 	}
+						 	var message = [];
+						 	message.push(callback);
+						 	client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[convoID],function(err,data){
+						 		message.push(data.rows);
+						 		res.json(message);
+						 	});
+						 });
+				}
+			]
+		);
 });
-//-------------------------------------------|
-// patient network stuff 					 |
-//-------------------------------------------|
 
 router.post('/network/create', function(req,res){
 		bcrypt.genSalt(circularSalt, function(err, salt) {
@@ -258,9 +292,6 @@ router.post('/network/create', function(req,res){
 	    });
 	});
 });
-
-
-
 
 //Register routes with a prefix for the API 
 app.use('/api',router);

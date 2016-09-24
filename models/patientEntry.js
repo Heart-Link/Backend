@@ -8,7 +8,8 @@ var patientSchema = new Schema({
 		type: String
 	},
 	entryInfo:{
-		type: Date
+		type: Date,
+		default: Date.now
 	},
 	recommendedVitals:{
 		bpHigh:{
@@ -29,10 +30,13 @@ var patientSchema = new Schema({
 		steps:{
 			type: Number //Number of steps a day
 		},
-		targetHR:{
-			type: Number // BPM recommended
+		averageHR:{
+			type: Number // Average daily BPM
+		},
+		stressLevel:{
+			type: Number
 		}
 	}
 
 });
-mongoose.model('patientEntry',patientSchema);
+module.exports = mongoose.model('patientEntry',patientSchema);
