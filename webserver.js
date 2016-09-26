@@ -95,6 +95,10 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 				res.status(200).json(config.sortPatients(results));
 		});
 	});
+	pgbae.on('error', function (err, client) {  
+ 	 console.error('idle client error', err.message, err.stack)
+	})
+
 });
 
 router.post('/patient/submit', function(req,res){
