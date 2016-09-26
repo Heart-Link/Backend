@@ -211,8 +211,9 @@ router.delete('/patients/delete', function(req,res){
 				res.status(300).json(results);
 			}
 			res.sendStatus(200); 
-		})
-	})
+		});
+		client.release();
+	});
 });
 
 router.get('/patients/collect:id',function(req,res){ // get Individual Patient Information
