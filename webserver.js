@@ -42,6 +42,9 @@ const pgbae = new Pool({
 	idleTimeoutMillis: 50
 });
 mongoose.connect('mongodb://mongobot:heartlink@ec2-54-163-104-129.compute-1.amazonaws.com:27017/heartlink');
+
+
+
 router.get('/',function(req,res){
 	res.json({ message: 'API Granted'});
 });
@@ -100,11 +103,10 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 	});
 	pgbae.on('error', function (err, client) {  
  		 console.error('idle client error', err.message, err.stack)
-	})
-
+	});
 });
 
-router.post('/patient/submit', function(req,res){
+router.post('/patient/submitData', function(req,res){
 	var entry = new patientEntry({
 		patientID : req.body.patientID,
 		recommendedVitals:{
@@ -125,10 +127,10 @@ router.post('/patient/submit', function(req,res){
 	pgbae.connect(function(err,client,done){
 		client.query('UPDATE public.patients SET gameification = gameification + 1 WHERE emrid = ($1)',[req.body.patientID],function(err,res){
 			if(err) throw err;
-			console.log(res);
+			console.log(res);    
 		});
 		client.release();
-	});
+	});   // Patient submits Health entry. Add values to mongo and save 
 })
 
 router.post('/patients/create', function(req,res){
@@ -136,12 +138,8 @@ router.post('/patients/create', function(req,res){
 		step 1: make conversation, generate patientID and save the convoID
 		step 2: make patient and input information
 		step 3: save all 
-		step 4: pray 
-
 		Notes: GenID is for messages, using EMRID for all patient ID needs
 		*/
-
-
 	var sugar = bcrypt.genSaltSync(circularSalt);
 	var genID = bcrypt.hashSync(req.body.emrid, sugar); // Used for messages
 	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.emrid+"','"+req.body.providerid+"','"+req.body.managerid+"')";
@@ -186,13 +184,61 @@ router.post('/patients/create', function(req,res){
 				console.log('success in Patient Creation');
 			}
 		});
+		res.sendStatus(200); 
+		client.release(); 
 	});
 });
 
-router.get('patients/individual:id',function(req,res){ // get Individual Patient Information
-	var patientID = req.query.id; //EMRID
-	var results = pgbae.query('SELECT * FROM public.patients WHERE emrid == '+patientID+"'");
-	console.log(results);
+router.post('/patients/update', function(req,res){
+	pgbae.connect(function(err,client,done){
+		client.query('UPDATE public.patients SET vitalsbph = ($1), vitalsbpl = ($2), vitalsweight = ($3), vitalsalcohol = ($4), managerid = ($5), patientEmail = ($6), steps = ($7), exercisetime = ($8), providerid = ($9) WHERE emrid = ($10)',
+			[req.body.vitalsbph, req.body.vitalsbpl, req.body.vitalsweight, req.body.vitalsalcohol, req.body.managerid, req.body.patientEmail, req.body.steps, req.body.exercise, req.body.providerid, req.body.patientID],
+			function(err,results){
+				if(err){
+					throw err;
+				}
+				console.log(results); 
+				res.sendStatus(200);
+			});
+		client.release();
+	})
+}); 
+
+router.delete('/patients/delete', function(req,res){
+	pgbae.connect(function(err,client,done){
+		client.query('DELETE FROM public.patients WHERE emrid = ($1)', [req.body.patientID], function(err,results){
+			if(err){
+				res.status(300).json(results);
+			}
+			res.sendStatus(200); 
+		})
+	})
+});
+
+router.get('/patients/collect:id',function(req,res){ // get Individual Patient Information
+	var patientID = req.query.id; 
+	async.waterfall([
+		function getPatientInformation(callback){
+			pgbae.connect(function(err,client,done){
+				if(err){
+					throw err;
+				}
+				client.query('SELECT * FROM public.patients WHERE emrid = ($1)',[patientID],function(err,results){
+					return callback(null, results.rows[0]);
+				});
+				client.release();
+			});
+		},
+		function getPatientSubmssions(patientInformation){
+			var object = [] 
+			object.push(patientInformation);
+			patientEntry.find({patientID: patientInformation.emrid},function(err,results){
+				object.push(results);
+				res.status(200).json(object);
+			});
+		}
+		]);
+
 });
 
 
@@ -200,7 +246,7 @@ router.get('patients/individual:id',function(req,res){ // get Individual Patient
 // Message System Routes					 |
 //-------------------------------------------|
 
-router.post('/messages/patient/send',function(req,res){ //iPhone app appending message to patient.
+router.post('/messages/patient/send',function(req,res){ 
 	
 });
 
@@ -270,11 +316,8 @@ router.post('/network/create', function(req,res){
 	    bcrypt.hash(req.body.networkname, salt, function(err, hash) {
 	         pgbae.connect(function(err,client,done){
 	         	if(err){
-	         		console.log('cantconnect: '+err);
+	         		console.log('cant connect: '+err);
 	         	}
-	        	else{
-	        		console.log('worked');
-	        	}
 	        	client.query("INSERT INTO public.network (networkid, networkname) VALUES ('"+hash+"','"+req.body.networkname+"')");
 	        	done();
 	        	client.release();
