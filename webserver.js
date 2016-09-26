@@ -11,6 +11,8 @@ const app = express();
 const router = express.Router();
 const async = require('async');
 const config = require('./config');
+require('events').EventEmitter.prototype._maxListeners = 100;
+
 //const jwt = require('jsonwebtoken');
 
 app.use(bodyparser.urlencoded({ extended: true}));
@@ -96,7 +98,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 		});
 	});
 	pgbae.on('error', function (err, client) {  
- 	 console.error('idle client error', err.message, err.stack)
+ 		 console.error('idle client error', err.message, err.stack)
 	})
 
 });
