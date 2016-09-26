@@ -127,6 +127,7 @@ router.post('/patient/submit', function(req,res){
 			if(err) throw err;
 			console.log(res);
 		});
+		client.release();
 	});
 })
 
@@ -222,6 +223,7 @@ router.post('/messages/id',function(req,res){  // Appending messages to a conver
  		});
  		console.log('message Posted');
  		res.sendStatus(200);
+ 		client.release();
  	});
 });
  
@@ -242,6 +244,7 @@ router.get('/messages:patient',function(req,res){ // Get a conversation with a p
 							client.query(statement,function(err,res){
 								return callback(null,res.rows[0].convoid,res.rows[0]);
 							});
+							client.release();
 						});
 					},
 				function getMessages(convoID,callback){
@@ -255,6 +258,7 @@ router.get('/messages:patient',function(req,res){ // Get a conversation with a p
 						 		message.push(data.rows);
 						 		res.json(message);
 						 	});
+						 	client.release();
 						 });
 				}
 			]
@@ -273,6 +277,7 @@ router.post('/network/create', function(req,res){
 	        	}
 	        	client.query("INSERT INTO public.network (networkid, networkname) VALUES ('"+hash+"','"+req.body.networkname+"')");
 	        	done();
+	        	client.release();
 	        });
 	    });
 	});
