@@ -39,7 +39,7 @@ const pgbae = new Pool({
 	host: databaseURL,
 	port: 5432,
 	max: 10,
-	idleTimeoutMillis: 30000
+	idleTimeoutMillis: 50
 });
 mongoose.connect('mongodb://mongobot:heartlink@ec2-54-163-104-129.compute-1.amazonaws.com:27017/heartlink');
 router.get('/',function(req,res){
