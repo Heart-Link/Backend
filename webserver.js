@@ -96,6 +96,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 		client.query('SELECT * FROM public.patients WHERE managerid = ($1)',[req.query.id], function(err,results){
 				res.status(200).json(config.sortPatients(results));
 		});
+		pgbae.release();
 	});
 	pgbae.on('error', function (err, client) {  
  		 console.error('idle client error', err.message, err.stack)
