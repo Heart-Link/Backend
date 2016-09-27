@@ -97,7 +97,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 			return console.error('error connecting client to pool: '+ err);
 		}
 		client.query('SELECT * FROM public.patients WHERE managerid = ($1)',[req.query.id], function(err,results){
-				res.status(200).json(config.sortPatients(results));
+				res.status(200).send(config.sortPatients(results));
 		});
 		client.release();
 	});
@@ -109,7 +109,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 router.post('/patient/submitData', function(req,res){
 	var entry = new patientEntry({
 		patientID : req.body.patientID,
-		recommendedVitals:{
+		dailyEntry:{
 			bpHigh: req.body.bpHigh,
 			bpLow:req.body.bpLow,
 			weight:req.body.weight,
