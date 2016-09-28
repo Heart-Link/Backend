@@ -115,7 +115,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 								 sex: results.rows[counter].gender,
 								 dob: results.rows[counter].dob,
 								 weight: results.rows[counter].weight,
-								 lastInput: entry,
+								 lastInput: config.objectWizard(entry),
 								 message: results.rows[counter].convoid
 								};
 							counter++;
@@ -127,8 +127,8 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 			
 				}	
 			}
+			
 			function convertAndSend(PatientList){
-				console.log(PatientList);
 				var rv = {};
 				for (var i = 0; i < PatientList.length; ++i)
 				    if (PatientList[i] !== undefined) rv[i] = PatientList[i];
