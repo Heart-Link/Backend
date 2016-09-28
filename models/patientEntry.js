@@ -11,7 +11,7 @@ var patientSchema = new Schema({
 		type: Date,
 		default: Date.now
 	},
-	recommendedVitals:{
+	dailyEntry:{
 		bpHigh:{
 			type: Number
 		}, 
