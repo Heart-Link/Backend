@@ -129,7 +129,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 			}
 			
 			function convertAndSend(PatientList){
-				res.send(PatientList)
+				res.status(200).send(PatientList)
 			}
 			
 		});
@@ -203,22 +203,12 @@ router.post('/patients/create', function(req,res){
 			mangerName;
 
 		client.query(convo, function(err,result){ // SEND create Message Command
-			if(err){
-				console.log('error: '+err);
-			}
-			else{
-				console.log('success in conversation creation'); 
-			}
+			if(err) throw err;
 		});
 		client.query(statement,function(err,result){ // send Create Patient Command
-			if(err){
-				console.log('error: '+err);
-			}
-			else{
-				console.log('success in Patient Creation');
-			}
+			if(err) throw err;
 		});
-		res.sendStatus(200); 
+		res.status(200).json("Patient Added Successfully"); 
 		client.release(); 
 	});
 });
