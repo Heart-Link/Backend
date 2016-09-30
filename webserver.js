@@ -129,10 +129,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 			}
 			
 			function convertAndSend(PatientList){
-				var rv = {};
-				for (var i = 0; i < PatientList.length; ++i)
-				    if (PatientList[i] !== undefined) rv[i] = PatientList[i];
-				res.status(200).send(rv);
+				res.send(PatientList)
 			}
 			
 		});

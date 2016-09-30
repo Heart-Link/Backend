@@ -35,6 +35,9 @@ var patientSchema = new Schema({
 		},
 		stressLevel:{
 			type: Number
+		},
+		smoke:{
+			type: Boolean
 		}
 	}
 

@@ -16,6 +16,7 @@ module.exports= {
           "steps": entry[0].dailyEntry.steps,
           "averageHR": entry[0].dailyEntry.averageHR,
           "stressLevel": entry[0].dailyEntry.stressLevel,
+          "smoke": entry[0].dailyEntry.smoke,
           "entryInfo": entry[0].entryInfo
 		}
 		return object;
