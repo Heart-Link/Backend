@@ -116,6 +116,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 								 dob: results.rows[counter].dob,
 								 weight: results.rows[counter].weight,
 								 lastInput: config.objectWizard(entry),
+								 status: results.rows[counter].status,
 								 message: results.rows[counter].convoid
 								};
 							counter++;
