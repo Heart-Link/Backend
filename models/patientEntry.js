@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var moment = require('moment');
 var Schema = mongoose.Schema,
 	ObjectID = Schema.ObjectId;
 
@@ -8,8 +9,8 @@ var patientSchema = new Schema({
 		type: String
 	},
 	entryInfo:{
-		type: Date,
-		default: Date.now
+		type: String,
+		default: moment().format()
 	},
 	dailyEntry:{
 		bpHigh:{
