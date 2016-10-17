@@ -166,6 +166,7 @@ router.post('/patient/submitData', function(req,res){
 		});
 		client.release();
 	});   // Patient submits Health entry. Add values to mongo and save 
+	res.sendStatus(200);
 })
 
 router.post('/patients/create', function(req,res){
