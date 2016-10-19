@@ -37,7 +37,7 @@ mongoose.connect(config.mongo);
 //-------------------------------------------|
 
 
-router.post('/login', function(req,res){
+app.post('/login', function(req,res){
 	account.findOne({ email: req.body.email },function(err,record){
 		 bcrypt.compare(req.body.passsword, record.password, function(err,success){
 		 	if(success){
@@ -61,7 +61,19 @@ router.post('/login', function(req,res){
 app.get('/logout', function(req,res){
 
 });
-
+app.post('/register', function(req,res){
+	bcrypt.genSalt(circularSalt,function(err,salt){
+		bcrypt.hash(req.body.password,salt, function(err,hash){
+			new account({
+				userEmail: req.body.email,
+				password: hash,
+				networkID: req.body.networkid,
+				userType: req.body.userType,
+				deviceID: req.body.deviceID
+			}).save();
+		});
+	});
+});
 // router.use(function(req,res,next){
 // 	 var token = req.body.token || req.query.token || req.headers['x-access-token'];
 // 	 if(token){
