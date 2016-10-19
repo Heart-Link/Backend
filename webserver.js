@@ -70,7 +70,10 @@ app.post('/register', function(req,res){
 				networkID: req.body.networkid,
 				userType: req.body.userType,
 				deviceID: req.body.deviceID
-			}).save();
+			}).entry.save(function(err){
+				if(err) throw err;
+				console.log('User Registration submitted');
+			});
 		});
 	});
 });
@@ -168,11 +171,11 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 			averageHR:req.body.hr,
 			stressLevel:req.body.stressLevel
 		}
-	})
+	});
 	entry.save(function(err){
 		if(err) throw err;
 		console.log('Patient Entry submitted');
-	})
+	});
 	pgbae.connect(function(err,client,done){
 		client.query('UPDATE public.patients SET gameification = gameification + 1 WHERE emrid = ($1)',[req.body.patientID],function(err,res){
 			if(err) throw err;
@@ -181,7 +184,7 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 		client.release();
 	});   // Patient submits Health entry. Add values to mongo and save 
 	res.sendStatus(200);
-})
+});
 
 router.post('/patients/create', function(req,res){   //Create a Patient from Web Portal
 	/* 
