@@ -1,6 +1,16 @@
 const patientEntry = require('./models/patientEntry.js'); 
 const async = require('async'); 
 module.exports= {
+	postgresConfig : {
+		user: 'sagar',
+		database: 'patientNetwork',
+		password: 'mistryohsd',
+		host: 'seniordesign.ceweg4niv3za.us-east-1.rds.amazonaws.com',
+		port: 5432,
+		max: 10,
+		idleTimeoutMillis: 50
+	},	
+	mongo : 'mongodb://mongobot:heartlink@ec2-54-163-104-129.compute-1.amazonaws.com:27017/heartlink',
 	secret: 'HaR@mb3',
 	objectWizard: function(entry){
 		console.log(entry);
@@ -55,5 +65,6 @@ module.exports= {
 		    if (PatientList[i] !== undefined) rv[i] = PatientList[i];
 		return rv;
 	}
+
 
 };

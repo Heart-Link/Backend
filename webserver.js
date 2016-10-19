@@ -13,7 +13,7 @@ const async = require('async');
 const config = require('./config');
 require('events').EventEmitter.prototype._maxListeners = 100;
 
-//const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 
 app.use(bodyparser.urlencoded({ extended: true}));
 app.use(bodyparser.json());
@@ -21,33 +21,14 @@ app.set('secret',config.secret);
 
 var port = process.env.PORT || 8080;
 
-app.use('/',function(req,res,next){
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept");
-	next();
-});
 
 // ------------- include Models -------------------
 
-const patientEntry = require('./models/patientEntry.js'); 
+const patientEntry = require('./models/patientEntry.js');
+const account = require('./models/account.js'); 
+const pgbae = new Pool(config.postgresConfig);
+mongoose.connect(config.mongo);
 
-const databaseURL = 'seniordesign.ceweg4niv3za.us-east-1.rds.amazonaws.com';
-const pgbae = new Pool({
-	user: 'sagar',
-	database: 'patientNetwork',
-	password: 'mistryohsd',
-	host: databaseURL,
-	port: 5432,
-	max: 10,
-	idleTimeoutMillis: 50
-});
-mongoose.connect('mongodb://mongobot:heartlink@ec2-54-163-104-129.compute-1.amazonaws.com:27017/heartlink');
-
-
-
-router.get('/',function(req,res){
-	res.json({ message: 'API Granted'});
-});
 
 //-------------------------------------------|
 //-------------------------------------------|
@@ -56,12 +37,9 @@ router.get('/',function(req,res){
 //-------------------------------------------|
 
 
-router.get('/login:email:password', function(req,res){
-	var userEmail = req.query.email;
-	var userPW = req.query.password;
-
-	person.findOne({ email: userEmail },function(err,record){
-		 bcrypt.compare(userPW, record.password, function(err,success){
+router.post('/login', function(req,res){
+	account.findOne({ email: req.body.email },function(err,record){
+		 bcrypt.compare(req.body.passsword, record.password, function(err,success){
 		 	if(success){
 		 		var token = jwt.sign(record, app.get('secret'),{
 		 			expiresInMinutes: 1440
@@ -72,7 +50,9 @@ router.get('/login:email:password', function(req,res){
 		 		});
 		 	}
 		 	else{
-		 		console.log('Login error: '+err);
+		 		res.status(200).json({
+		 			success: false
+		 		}); 
 		 	}
 		 })
 	});
@@ -81,6 +61,29 @@ router.get('/login:email:password', function(req,res){
 app.get('/logout', function(req,res){
 
 });
+
+// router.use(function(req,res,next){
+// 	 var token = req.body.token || req.query.token || req.headers['x-access-token'];
+// 	 if(token){
+// 			 	 // verifies secret and checks exp
+// 		    jwt.verify(token, app.get('secret'), function(err, decoded) {      
+// 		      if (err) {
+// 		        return res.json({ success: false, message: 'Failed to authenticate token.' });    
+// 		      } else {
+// 		        // if everything is good, save to request for use in other routes
+// 		        req.decoded = decoded;    
+// 		        next();
+// 		      }
+// 		    });
+// 		 } else {
+// 			    // if there is no token
+// 			    // return an error
+// 			    return res.status(403).send({ 
+// 			        success: false, 
+// 			        message: 'No token provided.' 
+// 			    });
+// 	 }
+// });
 
 
 
@@ -131,8 +134,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 			
 			function convertAndSend(PatientList){
 				res.status(200).send(PatientList)
-			}
-			
+			}	
 		});
 		client.release();
 	});
@@ -141,7 +143,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 	});
 });
 
-router.post('/patient/submitData', function(req,res){
+router.post('/patient/submitData', function(req,res){   //Patient Submitting Daily Entry from their iPhone
 	var entry = new patientEntry({
 		patientID : req.body.patientID,
 		dailyEntry:{
@@ -169,7 +171,7 @@ router.post('/patient/submitData', function(req,res){
 	res.sendStatus(200);
 })
 
-router.post('/patients/create', function(req,res){
+router.post('/patients/create', function(req,res){   //Create a Patient from Web Portal
 	/* 
 		step 1: make conversation, generate patientID and save the convoID
 		step 2: make patient and input information
@@ -212,10 +214,10 @@ router.post('/patients/create', function(req,res){
 		});
 		res.status(200).json("Patient Added Successfully"); 
 		client.release(); 
-	});
+	});   
 });
 
-router.post('/patients/update', function(req,res){
+router.post('/patients/update', function(req,res){ // Update a Patient from Web Portal
 	pgbae.connect(function(err,client,done){
 		client.query('UPDATE public.patients SET vitalsbph = ($1), vitalsbpl = ($2), vitalsweight = ($3), vitalsalcohol = ($4), managerid = ($5), patientEmail = ($6), steps = ($7), exercisetime = ($8), providerid = ($9) WHERE emrid = ($10)',
 			[req.body.vitalsbph, req.body.vitalsbpl, req.body.vitalsweight, req.body.vitalsalcohol, req.body.managerid, req.body.patientEmail, req.body.steps, req.body.exercise, req.body.providerid, req.body.patientID],
@@ -230,7 +232,7 @@ router.post('/patients/update', function(req,res){
 	})
 }); 
 
-router.delete('/patients/delete', function(req,res){
+router.delete('/patients/delete', function(req,res){ // Delete a Patient from the Web Portal
 	pgbae.connect(function(err,client,done){
 		client.query('DELETE FROM public.patients WHERE emrid = ($1)', [req.body.patientID], function(err,results){
 			if(err){
@@ -242,7 +244,7 @@ router.delete('/patients/delete', function(req,res){
 	});
 });
 
-router.get('/patients/collect:id',function(req,res){ // get Individual Patient Information
+router.get('/patients/collect:id',function(req,res){  //  Get an individual patient based off EMR from Web Portal
 	var patientID = req.query.id; 
 	async.waterfall([
 		function getPatientInformation(callback){
@@ -265,7 +267,6 @@ router.get('/patients/collect:id',function(req,res){ // get Individual Patient I
 			});
 		}
 		]);
-
 });
 
 
@@ -278,7 +279,7 @@ router.post('/messages/patient/send',function(req,res){
 });
 
 
-router.post('/messages/id',function(req,res){  // Appending messages to a converstaion
+router.post('/messages/id',function(req,res){  // Send a Message from either Web Portal or Phone
  	/* 
  	1. get Message , messenger ID and conversationID
  	2. Use ConversationID as connecting Key 
@@ -339,7 +340,7 @@ router.get('/messages:patient',function(req,res){ // Get a conversation with a p
 });
 
 router.post('/network/create', function(req,res){
-		bcrypt.genSalt(circularSalt, function(err, salt) {
+	bcrypt.genSalt(circularSalt, function(err, salt) {
 	    bcrypt.hash(req.body.networkname, salt, function(err, hash) {
 	         pgbae.connect(function(err,client,done){
 	         	if(err){
@@ -348,11 +349,21 @@ router.post('/network/create', function(req,res){
 	        	client.query("INSERT INTO public.network (networkid, networkname) VALUES ('"+hash+"','"+req.body.networkname+"')");
 	        	done();
 	        	client.release();
-	        });
+	       	});
 	    });
 	});
 });
 
+
+router.get('/',function(req,res){
+	res.json({ message: 'Less than 2 months til Final presentaion'});
+});
+
+app.use('/',function(req,res,next){
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept");
+	next();
+});
 //Register routes with a prefix for the API 
 app.use('/api',router);
 app.listen(port);
