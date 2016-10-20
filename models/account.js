@@ -19,7 +19,6 @@ var account = new Schema({
 	},
 	deviceID:{
 		type: String
-		default: ''
 	}
 });
 module.exports = mongoose.model('account',account);

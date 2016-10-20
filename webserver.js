@@ -26,6 +26,7 @@ var port = process.env.PORT || 8080;
 
 const patientEntry = require('./models/patientEntry.js');
 const account = require('./models/account.js'); 
+const tempAuth = require('./models/tempAuth.js');
 const pgbae = new Pool(config.postgresConfig);
 mongoose.connect(config.mongo);
 
@@ -61,22 +62,32 @@ app.post('/login', function(req,res){
 app.get('/logout', function(req,res){
 
 });
-app.post('/register', function(req,res){
-	bcrypt.genSalt(circularSalt,function(err,salt){
-		bcrypt.hash(req.body.password,salt, function(err,hash){
-			new account({
-				userEmail: req.body.email,
-				password: hash,
-				networkID: req.body.networkid,
-				userType: req.body.userType,
-				deviceID: req.body.deviceID
-			}).entry.save(function(err){
-				if(err) throw err;
-				console.log('User Registration submitted');
+app.post('/register', function(req,res){ // Make this async
+	var result = "success"; 
+	tempAuth.findOne({userEmail: req.body.email}, function(err,res){
+		if(res.tempID == req.body.verificationCode){
+			bcrypt.genSalt(circularSalt,function(err,salt){
+				bcrypt.hash(req.body.password,salt, function(err,hash){
+					var user = new account({
+									userEmail: req.body.email,
+									password: hash,
+									networkID: req.body.networkid,
+									userType: req.body.userType,
+									deviceID: req.body.deviceID
+								});
+					user.save(function(err){
+						if(err) throw err;
+						console.log('User Registration submitted');
+					});
+				});
 			});
-		});
-	});
+		}
+		
+	});	
+	res.status(200).json(result);
 });
+
+
 // router.use(function(req,res,next){
 // 	 var token = req.body.token || req.query.token || req.headers['x-access-token'];
 // 	 if(token){
@@ -193,6 +204,7 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		step 3: save all 
 		Notes: GenID is for messages, using EMRID for all patient ID needs
 		*/
+	console.log(req.body);
 	var sugar = bcrypt.genSaltSync(circularSalt);
 	var genID = bcrypt.hashSync(req.body.emrid, sugar); // Used for messages
 	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.emrid+"','"+req.body.providerid+"','"+req.body.managerid+"')";
@@ -213,7 +225,12 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 				"','" +req.body.exercisetime +
 				"','0','" + req.body.providerid +
 				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC')";
-
+	new tempAuth({
+		userEmail: req.body.patientEmail,
+		tempID: Math.floor(Math.random()*90000) + 10000
+	}).save(function(err,res){
+		if(err) throw err;
+	});
 	pgbae.connect(function(err,client,done){
 		if(err){
 			return console.error('error connecting client to pool: '+ err);
