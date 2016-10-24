@@ -292,11 +292,8 @@ router.get('/patients/collect:id',function(req,res){  //  Get an individual pati
 			});
 		},
 		function getPatientSubmssions(patientInformation){
-			var object = [] 
-			object.push(patientInformation);
 			patientEntry.find({patientID: patientInformation.emrid},function(err,results){
-				object.push(results);
-				res.status(200).json(object);
+				res.status(200).json(results);
 			});
 		}
 		]);
