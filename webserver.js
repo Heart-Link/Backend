@@ -172,6 +172,7 @@ router.get('/patientList:id',function(req,res){  // Get list of Patients based o
 router.post('/patient/submitData', function(req,res){   //Patient Submitting Daily Entry from their iPhone
 	var entry = new patientEntry({
 		patientID : req.body.patientID,
+		entryInfo : req.body.entryInfo,
 		dailyEntry:{
 			bpHigh: req.body.bpHigh,
 			bpLow:req.body.bpLow,
