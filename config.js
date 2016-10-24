@@ -18,15 +18,15 @@ module.exports= {
 			return entry;
 		}
 		var object = {
-		  "bpHigh": entry[0].dailyEntry.bpHigh,
-          "bpLow": entry[0].dailyEntry.bpLow,
-          "weight": entry[0].dailyEntry.weight,
-          "exerciseTime": entry[0].dailyEntry.exerciseTime,
-          "alcoholIntake": entry[0].dailyEntry.alcoholIntake,
-          "steps": entry[0].dailyEntry.steps,
-          "averageHR": entry[0].dailyEntry.averageHR,
-          "stressLevel": entry[0].dailyEntry.stressLevel,
-          "smoke": entry[0].dailyEntry.smoke,
+		  "bpHigh": entry[0].bpHigh,
+          "bpLow": entry[0].bpLow,
+          "weight": entry[0].weight,
+          "exerciseTime": entry[0].exerciseTime,
+          "alcoholIntake": entry[0].alcoholIntake,
+          "steps": entry[0].steps,
+          "averageHR": entry[0].averageHR,
+          "stressLevel": entry[0].stressLevel,
+          "smoke": entry[0].smoke,
           "entryInfo": entry[0].entryInfo
 		}
 		return object;
