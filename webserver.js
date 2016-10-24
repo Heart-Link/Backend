@@ -277,6 +277,7 @@ router.delete('/patients/delete', function(req,res){ // Delete a Patient from th
 });
 
 router.get('/patients/collect:id',function(req,res){  //  Get an individual patient based off EMR from Web Portal
+	console.log(req.query);
 	var patientID = req.query.id; 
 	async.waterfall([
 		function getPatientInformation(callback){
