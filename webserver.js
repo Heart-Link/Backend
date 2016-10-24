@@ -177,10 +177,11 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 			bpLow:req.body.bpLow,
 			weight:req.body.weight,
 			exerciseTime:req.body.exerciseTime,
-			alcoholIntake:req.body.booze,
+			alcoholIntake:req.body.alcoholIntake,
 			steps:req.body.steps,
-			averageHR:req.body.hr,
-			stressLevel:req.body.stressLevel
+			averageHR:req.body.averageHR,
+			stressLevel:req.body.stressLevel,
+			smoke:req.body.smoke
 		}
 	});
 	entry.save(function(err){
