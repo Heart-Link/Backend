@@ -12,35 +12,34 @@ var patientSchema = new Schema({
 		type: String,
 		default: moment().format()
 	},
-	dailyEntry:{
-		bpHigh:{
-			type: Number
-		}, 
-		bpLow:{
-			type: Number
-		},
-		weight:{
-			type:Number
-		},
-		exerciseTime:{
-			type: Number //Minutes daily
-		},
-		alcoholIntake:{
-			type: Number //glasses of alcohol per day
-		},
-		steps:{
-			type: Number //Number of steps a day
-		},
-		averageHR:{
-			type: Number // Average daily BPM
-		},
-		stressLevel:{
-			type: Number
-		},
-		smoke:{
-			type: Boolean
-		}
+	bpHigh:{
+		type: Number
+	}, 
+	bpLow:{
+		type: Number
+	},
+	weight:{
+		type:Number
+	},
+	exerciseTime:{
+		type: Number //Minutes daily
+	},
+	alcoholIntake:{
+		type: Number //glasses of alcohol per day
+	},
+	steps:{
+		type: Number //Number of steps a day
+	},
+	averageHR:{
+		type: Number // Average daily BPM
+	},
+	stressLevel:{
+		type: Number
+	},
+	smoke:{
+		type: Boolean
 	}
+	
 
 });
 module.exports = mongoose.model('patientEntry',patientSchema);

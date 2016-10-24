@@ -173,17 +173,15 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 	var entry = new patientEntry({
 		patientID : req.body.patientID,
 		entryInfo : req.body.entryInfo,
-		dailyEntry:{
-			bpHigh: req.body.bpHigh,
-			bpLow:req.body.bpLow,
-			weight:req.body.weight,
-			exerciseTime:req.body.exerciseTime,
-			alcoholIntake:req.body.alcoholIntake,
-			steps:req.body.steps,
-			averageHR:req.body.averageHR,
-			stressLevel:req.body.stressLevel,
-			smoke:req.body.smoke
-		}
+		bpHigh: req.body.bpHigh,
+		bpLow:req.body.bpLow,
+		weight:req.body.weight,
+		exerciseTime:req.body.exerciseTime,
+		alcoholIntake:req.body.alcoholIntake,
+		steps:req.body.steps,
+		averageHR:req.body.averageHR,
+		stressLevel:req.body.stressLevel,
+		smoke:req.body.smoke
 	});
 	entry.save(function(err){
 		if(err) throw err;

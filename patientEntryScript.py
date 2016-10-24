@@ -18,6 +18,5 @@ for number in range(1,y+1):
 		'averageHR':randint(58,70),
 		'stressLevel':randint(1,8),
 		'smoke': bool(random.getrandbits(1)),
-        'date': '2016-10-'+str(number)+'T15:14:52-04:00'
-                           
+        'entryInfo': '2016-10-'+str(number)+'T15:14:52-04:00'                         
 	})
