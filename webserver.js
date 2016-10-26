@@ -55,7 +55,7 @@ app.post('/login', function(req,res){
 				});
 			},
 			function token(record){
-				pgbae.query('SELECT firstname, providerid FROM public.providers WHERE username = ($1)',[req.body.email], function(err,result){
+				pgbae.query('SELECT firstname, providerid,isdoctor FROM public.employees WHERE username = ($1)',[req.body.email], function(err,result){
 		 			if(err){
 		 				res.status(200).json({
 				 			success: false
@@ -65,8 +65,9 @@ app.post('/login', function(req,res){
 			 			expiresIn: 60*60*24
 			 		});
 			 		res.json({
-			 			firstname: result.rows[0].firstname,
-			 			providerid: result.rows[0].providerid,
+			 			firstname: result.rows[0].firstname.trim(),
+			 			providerid: result.rows[0].providerid, 
+			 			isdoctor: result.rows[0].isdoctor,
 			 			token: token
 			 		});
 		 		});
@@ -410,18 +411,17 @@ app.post('/makeEmployee',function(req,res){
 		employeeID: bcrypt.hashSync(req.body.firstname + req.body.lastname + req.body.username, salty)
 	}
 	if(req.body.type == 'Provider'){
-		pgbae.query('INSERT INTO public.providers (firstname, lastname,  username, title, isdoctor, networkid, providerid) VALUES ($1, $2, $3, $4, $5, $6, $7)',[employee.firstname, employee.lastname, employee.username, employee.title,true, employee.networkID, employee.employeeID], function(err,results){
+		pgbae.query('INSERT INTO public.employees(firstname, lastname,  username, title, isdoctor, networkid, providerid) VALUES ($1, $2, $3, $4, $5, $6, $7)',[employee.firstname, employee.lastname, employee.username, employee.title,true, employee.networkID, employee.employeeID], function(err,results){
 			if(err) throw err;
 			res.status(200).json("Provider Made");
 		});
 	}
 	else{
-		pgbae.query('INSERT INTO public.managers (firstname, lastname,  username, title, networkid, managerid) VALUES ($1, $2, $3, $4, $5, $6)',[employee.firstname, employee.lastname, employee.username, employee.title, employee.networkID, employee.employeeID], function(err,results){
+		pgbae.query('INSERT INTO public.employees(firstname, lastname,  username, title, isdoctor, networkid, providerid) VALUES ($1, $2, $3, $4, $5, $6, $7)',[employee.firstname, employee.lastname, employee.username, employee.title,false, employee.networkID, employee.employeeID], function(err,results){
 			if(err) throw err;
-			res.status(200).json("manager made");
+			res.status(200).json("Manager Made");
 		});
 	}
-
 	new tempAuth({
 		userEmail: req.body.email,
 		tempID: 1
