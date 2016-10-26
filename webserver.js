@@ -1,4 +1,4 @@
- const express = require('express');
+const express = require('express');
 const bodyparser = require('body-parser');
 const bcrypt = require('bcrypt');
 const circularSalt = 10;
@@ -39,24 +39,38 @@ mongoose.connect(config.mongo);
 
 
 app.post('/login', function(req,res){
-	account.findOne({ email: req.body.email },function(err,record){
-		 bcrypt.compare(req.body.passsword, record.password, function(err,success){
-		 	if(success){
-		 		var token = jwt.sign(record, app.get('secret'),{
-		 			expiresInMinutes: 1440
+	async.waterfall([
+			function iscorrect(callback){
+				account.findOne({ userEmail: req.body.email },function(err,record){
+					 bcrypt.compare(req.body.password, record.password, function(err,success){
+					 	if(success){
+					 		return callback(null, record);
+					 	}
+					 	else{
+					 		res.status(200).json({
+					 			success: false
+					 		}); 
+					 	}
+					 })
+				});
+			},
+			function token(record){
+				pgbae.query('SELECT firstname FROM public.patients WHERE patientemail = ($1)',[req.body.email], function(err,result){
+		 			if(err){
+		 				res.status(200).json({
+				 			success: false
+				 		}); 
+		 			}
+			 		var token = jwt.sign(record, app.get('secret'),{
+			 			expiresIn: 60*60*24
+			 		});
+			 		res.json({
+			 			firstname: result.rows[0].firstname,
+			 			token: token
+			 		});
 		 		});
-		 		res.json({
-		 			success: true,
-		 			token: token
-		 		});
-		 	}
-		 	else{
-		 		res.status(200).json({
-		 			success: false
-		 		}); 
-		 	}
-		 })
-	});
+			}
+	]);
 });
 
 app.get('/logout', function(req,res){
@@ -88,28 +102,28 @@ app.post('/register', function(req,res){ // Make this async
 });
 
 
-// router.use(function(req,res,next){
-// 	 var token = req.body.token || req.query.token || req.headers['x-access-token'];
-// 	 if(token){
-// 			 	 // verifies secret and checks exp
-// 		    jwt.verify(token, app.get('secret'), function(err, decoded) {      
-// 		      if (err) {
-// 		        return res.json({ success: false, message: 'Failed to authenticate token.' });    
-// 		      } else {
-// 		        // if everything is good, save to request for use in other routes
-// 		        req.decoded = decoded;    
-// 		        next();
-// 		      }
-// 		    });
-// 		 } else {
-// 			    // if there is no token
-// 			    // return an error
-// 			    return res.status(403).send({ 
-// 			        success: false, 
-// 			        message: 'No token provided.' 
-// 			    });
-// 	 }
-// });
+router.use(function(req,res,next){
+	 var token = req.body.token || req.query.token || req.headers['x-access-token'];
+	 if(token){
+			 	 // verifies secret and checks exp
+		    jwt.verify(token, app.get('secret'), function(err, decoded) {      
+		      if (err) {
+		        return res.json({ success: false, message: 'Failed to authenticate token.' });    
+		      } else {
+		        // if everything is good, save to request for use in other routes
+		        req.decoded = decoded;    
+		        next();
+		      }
+		    });
+		 } else {
+			    // if there is no token
+			    // return an error
+			    return res.status(403).send({ 
+			        success: false, 
+			        message: 'No token provided.' 
+			    });
+	 }
+});
 
 
 
@@ -385,6 +399,16 @@ router.post('/network/create', function(req,res){
 	});
 });
 
+app.post('/makeEmployee',function(req,res){
+	new tempAuth({
+		userEmail: req.body.email,
+		tempID: 1
+	}).save(function(err,res){
+		if(err) throw err;
+	});
+
+	res.sendStatus(200);
+})
 
 router.get('/',function(req,res){
 	res.json({ message: 'Less than 2 months til Final presentaion'});
