@@ -136,50 +136,95 @@ router.use(function(req,res,next){
 // 											 |
 //-------------------------------------------|
 
-router.get('/patientList:id',function(req,res){  // Get list of Patients based off the user ID (either Patient or Manager)
+router.get('/patientList:id:doc',function(req,res){  // Get list of Patients based off the user ID (either Patient or Manager)
+	console.log(req.query.id);
+	console.log(req.query.doc);
 	pgbae.connect(function(err, client, done){
 		if(err){
 			return console.error('error connecting client to pool: '+ err);
 		}
-		client.query('SELECT * FROM public.patients WHERE managerid = ($1)',[req.query.id], function(err,results){
-			initialize(results);
-			function initialize(results){
-				const PatientList = [];
-				getLatestInput(results, PatientList);
-			}
-			function getLatestInput(results, PatientList){
-				var patientCount = results.rowCount;
-				for(x = 0; x<patientCount;x++){
-					var counter = 0;
-					patientEntry.find({"patientID":results.rows[x].emrid}).sort({"entryInfo": -1}).limit(1).exec(function(err,entry){
-							var patient = {
-								 firstName: results.rows[counter].firstname,
-								 lastName: results.rows[counter].lastname,
-								 pid: results.rows[counter].emrid,
-								 provider: results.rows[counter].providerid,
-								 sex: results.rows[counter].gender,
-								 dob: results.rows[counter].dob,
-								 weight: results.rows[counter].weight,
-								 lastInput: config.objectWizard(entry),
-								 status: results.rows[counter].status,
-								 message: results.rows[counter].convoid
-								};
-							counter++;
-							PatientList.push(patient);
-							if(counter === patientCount){
-								convertAndSend(PatientList);
-							}
-					});
-			
+		if(req.query.doc === 'true'){
+			client.query('SELECT * FROM public.patients WHERE providerid = ($1)',[req.query.id], function(err,results){
+				initialize(results);
+				function initialize(results){
+					const PatientList = [];
+					getLatestInput(results, PatientList);
+				}
+				function getLatestInput(results, PatientList){
+					console.log(results);
+					var patientCount = results.rowCount;
+					for(x = 0; x<patientCount;x++){
+						var counter = 0;
+						patientEntry.find({"patientID":results.rows[x].emrid}).sort({"entryInfo": -1}).limit(1).exec(function(err,entry){
+								var patient = {
+									 firstName: results.rows[counter].firstname,
+									 lastName: results.rows[counter].lastname,
+									 pid: results.rows[counter].emrid,
+									 provider: results.rows[counter].providerid,
+									 sex: results.rows[counter].gender,
+									 dob: results.rows[counter].dob,
+									 weight: results.rows[counter].weight,
+									 lastInput: config.objectWizard(entry),
+									 status: results.rows[counter].status,
+									 message: results.rows[counter].convoid
+									};
+								counter++;
+								PatientList.push(patient);
+								if(counter === patientCount){
+									convertAndSend(PatientList);
+								}
+						});
+				
+					}	
+				}
+				
+				function convertAndSend(PatientList){
+					res.status(200).send(PatientList)
 				}	
-			}
-			
-			function convertAndSend(PatientList){
-				res.status(200).send(PatientList)
-			}	
-		});
-		client.release();
-	});
+			});
+			client.release();
+		}
+		else{
+			client.query('SELECT * FROM public.patients WHERE managerid = ($1)',[req.query.id], function(err,results){
+						initialize(results);
+						function initialize(results){
+							const PatientList = [];
+							getLatestInput(results, PatientList);
+						}
+						function getLatestInput(results, PatientList){
+							var patientCount = results.rowCount;
+							for(x = 0; x<patientCount;x++){
+								var counter = 0;
+								patientEntry.find({"patientID":results.rows[x].emrid}).sort({"entryInfo": -1}).limit(1).exec(function(err,entry){
+										var patient = {
+											 firstName: results.rows[counter].firstname,
+											 lastName: results.rows[counter].lastname,
+											 pid: results.rows[counter].emrid,
+											 provider: results.rows[counter].providerid,
+											 sex: results.rows[counter].gender,
+											 dob: results.rows[counter].dob,
+											 weight: results.rows[counter].weight,
+											 lastInput: config.objectWizard(entry),
+											 status: results.rows[counter].status,
+											 message: results.rows[counter].convoid
+											};
+										counter++;
+										PatientList.push(patient);
+										if(counter === patientCount){
+											convertAndSend(PatientList);
+										}
+								});
+						
+							}	
+						}
+						
+						function convertAndSend(PatientList){
+							res.status(200).send(PatientList)
+						}	
+					});
+				}
+			});
+
 	pgbae.on('error', function (err, client) {  
  		 console.error('idle client error', err.message, err.stack)
 	});
