@@ -1,5 +1,6 @@
 const patientEntry = require('./models/patientEntry.js'); 
 const async = require('async'); 
+
 module.exports= {
 	postgresConfig : {
 		user: 'sagar',
@@ -13,7 +14,6 @@ module.exports= {
 	mongo : 'mongodb://mongobot:heartlink@ec2-54-163-104-129.compute-1.amazonaws.com:27017/heartlink',
 	secret: 'HaR@mb3',
 	objectWizard: function(entry){
-		console.log(entry);
 		if(entry.length < 1){
 			return entry;
 		}
@@ -43,7 +43,6 @@ module.exports= {
 				}
 				],
 				function createPatient(err,entry){
-					console.log(results);
 					var patient = {
 						 firstName: results.rows[x].firstname,
 						 lastName: results.rows[x].lastname,

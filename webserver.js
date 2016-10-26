@@ -11,6 +11,7 @@ const app = express();
 const router = express.Router();
 const async = require('async');
 const config = require('./config');
+const helper = require('./helper'); 
 require('events').EventEmitter.prototype._maxListeners = 100;
 
 const jwt = require('jsonwebtoken');
@@ -151,7 +152,6 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 					getLatestInput(results, PatientList);
 				}
 				function getLatestInput(results, PatientList){
-					console.log(results);
 					var patientCount = results.rowCount;
 					for(x = 0; x<patientCount;x++){
 						var counter = 0;
@@ -160,7 +160,7 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 									 firstName: results.rows[counter].firstname,
 									 lastName: results.rows[counter].lastname,
 									 pid: results.rows[counter].emrid,
-									 provider: results.rows[counter].providerid,
+									 provider: results.rows[counter].providername,
 									 sex: results.rows[counter].gender,
 									 dob: results.rows[counter].dob,
 									 weight: results.rows[counter].weight,
@@ -200,7 +200,7 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 											 firstName: results.rows[counter].firstname,
 											 lastName: results.rows[counter].lastname,
 											 pid: results.rows[counter].emrid,
-											 provider: results.rows[counter].providerid,
+											 provider: results.rows[counter].providername,
 											 sex: results.rows[counter].gender,
 											 dob: results.rows[counter].dob,
 											 weight: results.rows[counter].weight,
