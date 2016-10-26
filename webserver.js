@@ -270,7 +270,7 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 	var sugar = bcrypt.genSaltSync(circularSalt);
 	var genID = bcrypt.hashSync(req.body.emrid, sugar); // Used for messages
 	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.emrid+"','"+req.body.providerid+"','"+req.body.managerid+"')";
-	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, vitalsweight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, steps, exercisetime, gameification,providerid,networkid) VALUES " +
+	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, vitalsweight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, steps, exercisetime, gameification,providerid,networkid, weight) VALUES " +
 				"('" + req.body.firstname + 
 				"','" +req.body.lastname +
 				"','" +req.body.vitalsbph +
@@ -286,7 +286,9 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 				"','" +req.body.steps +
 				"','" +req.body.exercisetime +
 				"','0','" + req.body.providerid +
-				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC')";
+				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC"+
+				"','" + req.body.weight+"')";
+	console.log(statement); 
 	new tempAuth({
 		userEmail: req.body.patientEmail,
 		tempID: Math.floor(Math.random()*90000) + 10000
@@ -306,6 +308,14 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		client.query(statement,function(err,result){ // send Create Patient Command
 			if(err) throw err;
 		});
+		client.query('SELECT lastname FROM public.employees WHERE providerid = ($1)', [req.body.providerid], function(err,result){
+			if(err) throw err;
+			console.log(result.rows[0].lastname);
+			client.query('UPDATE public.patients SET providername = ($1) WHERE emrid = ($2)',[result.rows[0].lastname, req.body.emrid], function(err,final){
+				if(err) throw err;
+				console.log('party');
+			})
+		})
 		res.status(200).json("Patient Added Successfully"); 
 		client.release(); 
 	});   
