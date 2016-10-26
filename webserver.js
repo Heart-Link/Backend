@@ -55,7 +55,7 @@ app.post('/login', function(req,res){
 				});
 			},
 			function token(record){
-				pgbae.query('SELECT firstname FROM public.patients WHERE patientemail = ($1)',[req.body.email], function(err,result){
+				pgbae.query('SELECT firstname, providerid FROM public.providers WHERE username = ($1)',[req.body.email], function(err,result){
 		 			if(err){
 		 				res.status(200).json({
 				 			success: false
@@ -66,6 +66,7 @@ app.post('/login', function(req,res){
 			 		});
 			 		res.json({
 			 			firstname: result.rows[0].firstname,
+			 			providerid: result.rows[0].providerid,
 			 			token: token
 			 		});
 		 		});
@@ -383,7 +384,6 @@ router.get('/messages:patient',function(req,res){ // Get a conversation with a p
 			]
 		);
 });
-
 router.post('/network/create', function(req,res){
 	bcrypt.genSalt(circularSalt, function(err, salt) {
 	    bcrypt.hash(req.body.networkname, salt, function(err, hash) {
@@ -400,6 +400,28 @@ router.post('/network/create', function(req,res){
 });
 
 app.post('/makeEmployee',function(req,res){
+	var salty = bcrypt.genSaltSync(circularSalt);
+	var employee = {
+		firstname: req.body.firstname, 
+		lastname: req.body.lastname,
+		username: req.body.email, 
+		title: req.body.title,
+		networkID: req.body.networkid,
+		employeeID: bcrypt.hashSync(req.body.firstname + req.body.lastname + req.body.username, salty)
+	}
+	if(req.body.type == 'Provider'){
+		pgbae.query('INSERT INTO public.providers (firstname, lastname,  username, title, isdoctor, networkid, providerid) VALUES ($1, $2, $3, $4, $5, $6, $7)',[employee.firstname, employee.lastname, employee.username, employee.title,true, employee.networkID, employee.employeeID], function(err,results){
+			if(err) throw err;
+			res.status(200).json("Provider Made");
+		});
+	}
+	else{
+		pgbae.query('INSERT INTO public.managers (firstname, lastname,  username, title, networkid, managerid) VALUES ($1, $2, $3, $4, $5, $6)',[employee.firstname, employee.lastname, employee.username, employee.title, employee.networkID, employee.employeeID], function(err,results){
+			if(err) throw err;
+			res.status(200).json("manager made");
+		});
+	}
+
 	new tempAuth({
 		userEmail: req.body.email,
 		tempID: 1
@@ -407,7 +429,7 @@ app.post('/makeEmployee',function(req,res){
 		if(err) throw err;
 	});
 
-	res.sendStatus(200);
+
 })
 
 router.get('/',function(req,res){

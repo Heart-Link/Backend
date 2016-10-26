@@ -19,6 +19,9 @@ var account = new Schema({
 	},
 	deviceID:{
 		type: String
+	},
+	userID:{
+		type: String
 	}
 });
 module.exports = mongoose.model('account',account);
