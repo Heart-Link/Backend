@@ -75,7 +75,6 @@ app.post('/login', function(req,res){
 			}
 	]);
 });
-
 app.get('/logout', function(req,res){
 
 });
@@ -103,8 +102,6 @@ app.post('/register', function(req,res){ // Make this async
 	});	
 	res.status(200).json(result);
 });
-
-
 router.use(function(req,res,next){
 	 var token = req.body.token || req.query.token || req.headers['x-access-token'];
 	 if(token){
@@ -127,9 +124,6 @@ router.use(function(req,res,next){
 			    });
 	 }
 });
-
-
-
 //-------------------------------------------|
 // Patient System Routes					 |
 // 											 |
@@ -231,7 +225,6 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 });
 
 router.post('/patient/submitData', function(req,res){   //Patient Submitting Daily Entry from their iPhone
-	console.log(res);
 	var entry = new patientEntry({
 		patientID : req.body.patientID,
 		entryInfo : req.body.entryInfo,
@@ -371,6 +364,39 @@ router.get('/patients/collect:id',function(req,res){  //  Get an individual pati
 		]);
 });
 
+app.get('/average',function(req,res){
+	var heartRateArray = [];
+	var stressLevelArr = [];
+	var stepsArr = [];
+	var exerciseTimeArr = [];
+	var weightArr = []; 
+	var bpLowArr = []; 
+	var bpHighArr = [];
+
+	
+	//Smoke Arr?
+	patientEntry.find({$where: function () { return Date.now() - this._id.getTimestamp() < (24 * 60 * 60 * 1000)  }}, function(err,docs){
+		for(x = 0; x<docs.length; x++){
+			heartRateArray.push(docs[x].averageHR);
+			stressLevelArr.push(docs[x].stressLevel);
+			stepsArr.push(docs[x].steps);
+			exerciseTimeArr.push(docs[x].exerciseTime);
+			weightArr.push(docs[x].weight);
+			bpLowArr.push(docs[x].bpLow);
+			bpHighArr.push(docs[x].bpHigh);
+		}
+		var averagePatient = { 
+			heartRate:  heartRateArray.reduce((a, b) => a + b, 0)/heartRateArray.length,
+			stressLevel: stressLevelArr.reduce((a, b) => a + b, 0)/stressLevelArr.length,
+			steps: stepsArr.reduce((a, b) => a + b, 0)/stepsArr.length,
+			exerciseTime: exerciseTimeArr.reduce((a, b) => a + b, 0)/exerciseTimeArr.length, 
+			weight: weightArr.reduce((a, b) => a + b, 0)/weightArr.length, 
+			bpLow: bpLowArr.reduce((a, b) => a + b, 0)/bpLowArr.length,
+			bpHigh: bpHighArr.reduce((a, b) => a + b, 0)/bpHighArr.length
+		};
+		res.json(averagePatient);
+	});
+});
 
 //-------------------------------------------|
 // Message System Routes					 |
@@ -483,9 +509,7 @@ app.post('/makeEmployee',function(req,res){
 	}).save(function(err,res){
 		if(err) throw err;
 	});
-
-
-})
+});
 
 router.get('/',function(req,res){
 	res.json({ message: 'Less than 2 months til Final presentaion'});
