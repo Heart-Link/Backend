@@ -228,7 +228,7 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 
 	var entry = ({
 		patientID : req.body.patientID,
-		entryInfo : req.body.entryInfo,
+		entryInfo : Date.now(),
 		bpHigh: req.body.bpHigh,
 		bpLow:req.body.bpLow,
 		weight:req.body.weight,
@@ -239,6 +239,7 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 		stressLevel:req.body.stressLevel,
 		smoke:req.body.smoke
 	});
+	console.log(entry);
 	// entry.save(function(err){
 	// 	if(err) throw err;
 	// 	console.log('Patient Entry submitted');
