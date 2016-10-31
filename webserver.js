@@ -224,7 +224,7 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 	});
 });
 app.post('/patient/submitData', function(req,res){   //Patient Submitting Daily Entry from their iPhone
-	console.log(req);
+	console.log(req.body);
 	var entry = new patientEntry({
 		patientID : req.body.patientID,
 		entryInfo : moment().format(),
