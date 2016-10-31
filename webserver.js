@@ -223,8 +223,35 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
  		 console.error('idle client error', err.message, err.stack)
 	});
 });
-
 router.post('/patient/submitData', function(req,res){   //Patient Submitting Daily Entry from their iPhone
+	var entry = new patientEntry({
+		patientID : req.body.patientID,
+		entryInfo : moment().format(),
+		bpHigh: req.body.bpHigh,
+		bpLow:req.body.bpLow,
+		weight:req.body.weight,
+		exerciseTime:req.body.exerciseTime,
+		alcoholIntake:req.body.alcoholIntake,
+		steps:Math.round(parseInt(req.body.steps.split(' ')[0], 10)),
+		averageHR: Math.round(parseFloat(req.body.averageHR.split(' ')[0], 10)*60),
+		stressLevel:req.body.stressLevel,
+		smoke:req.body.smoke
+	});
+	entry.save(function(err){
+		if(err) throw err;
+		console.log('Patient Entry submitted');
+	});
+	pgbae.connect(function(err,client,done){
+		client.query('UPDATE public.patients SET gameification = gameification + 1 WHERE emrid = ($1)',[req.body.patientID],function(err,res){
+			if(err) throw err;
+			console.log(res);    
+		});
+		client.release();
+	});   // Patient submits Health entry. Add values to mongo and save 
+	res.sendStatus(200);
+});
+
+router.post('/patient/submitDataTest', function(req,res){   //Patient Submitting Daily Entry from their iPhone
 	var entry = new patientEntry({
 		patientID : req.body.patientID,
 		entryInfo : req.body.entryInfo,
