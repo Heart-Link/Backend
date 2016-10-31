@@ -223,8 +223,7 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
  		 console.error('idle client error', err.message, err.stack)
 	});
 });
-app.post('/patient/submitData', function(req,res){   //Patient Submitting Daily Entry from their iPhone
-	console.log(req.body);
+router.post('/patient/submitData', function(req,res){   //Patient Submitting Daily Entry from their iPhone
 	var entry = new patientEntry({
 		patientID : req.body.patientID,
 		entryInfo : moment().format(),
