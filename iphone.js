@@ -38,6 +38,44 @@ mongoose.connect(config.mongo);
 //-------------------------------------------|
 //-------------------------------------------|
 
+app.post('/login/patient', function(req,res){
+	// async.waterfall([
+	// 		function iscorrect(callback){
+	// 			account.findOne({ userEmail: req.body.email },function(err,record){
+	// 				 bcrypt.compare(req.body.password, record.password, function(err,success){
+	// 				 	if(success){
+	// 				 		return callback(null, record);
+	// 				 	}
+	// 				 	else{
+	// 				 		res.status(200).json({
+	// 				 			success: false
+	// 				 		}); 
+	// 				 	}
+	// 				 })
+	// 			});
+	// 		},
+	// 		function token(record){
+	// 			pgbae.query('SELECT firstname, providerid, isdoctor FROM public.employees WHERE username = ($1)',[req.body.email], function(err,result){
+	// 	 			if(err){
+	// 	 				res.status(200).json({
+	// 			 			success: false
+	// 			 		}); 
+	// 	 			}
+	// 		 		var token = jwt.sign(record, app.get('secret'),{
+	// 		 			expiresIn: 60*60*24
+	// 		 		});
+	// 		 		res.json({
+	// 		 			firstname: result.rows[0].firstname.trim(),
+	// 		 			providerid: result.rows[0].providerid, 
+	// 		 			isdoctor: result.rows[0].isdoctor,
+	// 		 			token: token
+	// 		 		});
+	// 	 		});
+	// 		}
+	// ]);
+
+	console.log(req.body);
+})
 
 app.post('/login', function(req,res){
 	async.waterfall([
