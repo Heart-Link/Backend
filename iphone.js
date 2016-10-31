@@ -225,32 +225,32 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 });
 
 router.post('/patient/submitData', function(req,res){   //Patient Submitting Daily Entry from their iPhone
-
+	console.log(req);
 	console.log(req.body);
-	var entry = new patientEntry({
-		patientID : req.body.patientID,
-		entryInfo : req.body.entryInfo,
-		bpHigh: req.body.bpHigh,
-		bpLow:req.body.bpLow,
-		weight:req.body.weight,
-		exerciseTime:req.body.exerciseTime,
-		alcoholIntake:req.body.alcoholIntake,
-		steps:req.body.steps,
-		averageHR:req.body.averageHR,
-		stressLevel:req.body.stressLevel,
-		smoke:req.body.smoke
-	});
-	entry.save(function(err){
-		if(err) throw err;
-		console.log('Patient Entry submitted');
-	});
-	pgbae.connect(function(err,client,done){
-		client.query('UPDATE public.patients SET gameification = gameification + 1 WHERE emrid = ($1)',[req.body.patientID],function(err,res){
-			if(err) throw err;
-			console.log(res);    
-		});
-		client.release();
-	});   // Patient submits Health entry. Add values to mongo and save 
+	// var entry = new patientEntry({
+	// 	patientID : req.body.patientID,
+	// 	entryInfo : req.body.entryInfo,
+	// 	bpHigh: req.body.bpHigh,
+	// 	bpLow:req.body.bpLow,
+	// 	weight:req.body.weight,
+	// 	exerciseTime:req.body.exerciseTime,
+	// 	alcoholIntake:req.body.alcoholIntake,
+	// 	steps:req.body.steps,
+	// 	averageHR:req.body.averageHR,
+	// 	stressLevel:req.body.stressLevel,
+	// 	smoke:req.body.smoke
+	// });
+	// entry.save(function(err){
+	// 	if(err) throw err;
+	// 	console.log('Patient Entry submitted');
+	// });
+	// pgbae.connect(function(err,client,done){
+	// 	client.query('UPDATE public.patients SET gameification = gameification + 1 WHERE emrid = ($1)',[req.body.patientID],function(err,res){
+	// 		if(err) throw err;
+	// 		console.log(res);    
+	// 	});
+	// 	client.release();
+	// });   // Patient submits Health entry. Add values to mongo and save 
 	res.sendStatus(200);
 });
 
