@@ -83,7 +83,7 @@ app.post('/login/patient', function(req,res){
 				account.findOne({ userEmail: req.body.email },function(err,record){
 					 bcrypt.compare(req.body.password, record.password, function(err,success){
 					 	if(success){
-					 		console.log('succes'); 
+					 		console.log('success'); 
 					 		return callback(null, record);
 					 	}
 					 	else{
@@ -96,7 +96,11 @@ app.post('/login/patient', function(req,res){
 				});
 			},
 			function token(record){
-				console.log(req.body.email);
+				var update = {deviceID: req.body.deviceID};
+				account.findOneAndUpdate({userEmail : record.userEmail}, update, function(err,result){
+					if(err) throw err;
+					console.log('record updated');
+				});
 				pgbae.query('SELECT firstname, networkid, convoid, gameification, emrid FROM public.patients WHERE patientemail = ($1)',[req.body.email], function(err,results){
 		 			if(err){
 		 				res.status(200).json({
@@ -108,7 +112,6 @@ app.post('/login/patient', function(req,res){
 			 			expiresIn: 60*60*24
 			 		});
 			 		res.json({
-			 			firstname: results.rows[0].firstname.trim(),
 			 			networkid: results.rows[0].networkid, 
 			 			convoid: results.rows[0].convoid,
 			 			gameification: results.rows[0].gameification, 
