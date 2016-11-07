@@ -10,6 +10,12 @@ var tempAuth = new Schema({
 	},
 	tempID:{
 		type: Number
+	},
+	networkID:{
+		type: String
+	},
+	userType:{
+		type:String
 	}
 });
 module.exports = mongoose.model('tempAuth',tempAuth);

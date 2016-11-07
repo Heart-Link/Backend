@@ -12,6 +12,7 @@ const router = express.Router();
 const async = require('async');
 const config = require('./config');
 const helper = require('./helper'); 
+const apn = require('apn'); 
 require('events').EventEmitter.prototype._maxListeners = 100;
 
 const jwt = require('jsonwebtoken');
@@ -75,20 +76,65 @@ app.post('/login', function(req,res){
 			}
 	]);
 });
+
+app.post('/login/patient', function(req,res){
+	async.waterfall([
+			function iscorrect(callback){
+				account.findOne({ userEmail: req.body.email },function(err,record){
+					 bcrypt.compare(req.body.password, record.password, function(err,success){
+					 	if(success){
+					 		console.log('succes'); 
+					 		return callback(null, record);
+					 	}
+					 	else{
+					 		console.log('loginfail)');
+					 		res.status(200).json({
+					 			success: false
+					 		}); 
+					 	}
+					 })
+				});
+			},
+			function token(record){
+				console.log(req.body.email);
+				pgbae.query('SELECT firstname, networkid, convoid, gameification, emrid FROM public.patients WHERE patientemail = ($1)',[req.body.email], function(err,results){
+		 			if(err){
+		 				res.status(200).json({
+				 			success: false
+				 		}); 
+		 			}
+		 			console.log(results);
+			 		var token = jwt.sign(record, app.get('secret'),{
+			 			expiresIn: 60*60*24
+			 		});
+			 		res.json({
+			 			firstname: results.rows[0].firstname.trim(),
+			 			networkid: results.rows[0].networkid, 
+			 			convoid: results.rows[0].convoid,
+			 			gameification: results.rows[0].gameification, 
+			 			emrid: results.rows[0].emrid,
+			 			token: token
+			 		});
+		 		});
+			}
+	]);
+
+	console.log(req.body);
+})
 app.get('/logout', function(req,res){
 
 });
 app.post('/register', function(req,res){ // Make this async
 	var result = "success"; 
-	tempAuth.findOne({userEmail: req.body.email}, function(err,res){
+	tempAuth.findOne({userEmail: req.body.email}, function(err,result){
 		if(res.tempID == req.body.verificationCode){
 			bcrypt.genSalt(circularSalt,function(err,salt){
 				bcrypt.hash(req.body.password,salt, function(err,hash){
 					var user = new account({
 									userEmail: req.body.email,
 									password: hash,
-									networkID: req.body.networkid,
-									userType: req.body.userType,
+									networkID: result.networkID,
+									userType: result.userType,
 									deviceID: req.body.deviceID
 								});
 					user.save(function(err){
@@ -232,7 +278,7 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 		weight:req.body.weight,
 		exerciseTime:req.body.exerciseTime,
 		alcoholIntake:req.body.alcoholIntake,
-		steps:Math.round(parseInt(req.body.steps.split(' ')[0], 10)),
+		steps: Math.round(parseInt(req.body.steps.split(' ')[0], 10)),
 		averageHR: Math.round(parseFloat(req.body.averageHR.split(' ')[0], 10)*60),
 		stressLevel:req.body.stressLevel,
 		smoke:req.body.smoke
@@ -252,30 +298,33 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 });
 
 router.post('/patient/submitDataTest', function(req,res){   //Patient Submitting Daily Entry from their iPhone
-	var entry = new patientEntry({
-		patientID : req.body.patientID,
-		entryInfo : req.body.entryInfo,
-		bpHigh: req.body.bpHigh,
-		bpLow:req.body.bpLow,
-		weight:req.body.weight,
-		exerciseTime:req.body.exerciseTime,
-		alcoholIntake:req.body.alcoholIntake,
-		steps:req.body.steps,
-		averageHR:req.body.averageHR,
-		stressLevel:req.body.stressLevel,
-		smoke:req.body.smoke
-	});
-	entry.save(function(err){
-		if(err) throw err;
-		console.log('Patient Entry submitted');
-	});
-	pgbae.connect(function(err,client,done){
-		client.query('UPDATE public.patients SET gameification = gameification + 1 WHERE emrid = ($1)',[req.body.patientID],function(err,res){
-			if(err) throw err;
-			console.log(res);    
-		});
-		client.release();
-	});   // Patient submits Health entry. Add values to mongo and save 
+	 console.log(req.body)
+	 //helper.runAnalysis(req.body, function(result){});
+	
+	// var entry = new patientEntry({
+	// 	patientID : req.body.patientID,
+	// 	entryInfo : req.body.entryInfo,
+	// 	bpHigh: req.body.bpHigh,
+	// 	bpLow:req.body.bpLow,
+	// 	weight:req.body.weight,
+	// 	exerciseTime:req.body.exerciseTime,
+	// 	alcoholIntake:req.body.alcoholIntake,
+	// 	steps:req.body.steps,
+	// 	averageHR:req.body.averageHR,
+	// 	stressLevel:req.body.stressLevel,
+	// 	smoke:req.body.smoke
+	// });
+	// entry.save(function(err){
+	// 	if(err) throw err;
+	// 	console.log('Patient Entry submitted');
+	// });
+	// pgbae.connect(function(err,client,done){
+	// 	client.query('UPDATE public.patients SET gameification = gameification + 1 WHERE emrid = ($1)',[req.body.patientID],function(err,res){
+	// 		if(err) throw err;
+	// 		console.log(res);    
+	// 	});
+	// 	client.release();
+	// });   // Patient submits Health entry. Add values to mongo and save 
 	res.sendStatus(200);
 });
 
@@ -290,12 +339,12 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 	var sugar = bcrypt.genSaltSync(circularSalt);
 	var genID = bcrypt.hashSync(req.body.emrid, sugar); // Used for messages
 	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.emrid+"','"+req.body.providerid+"','"+req.body.managerid+"')";
-	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, vitalsweight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, steps, exercisetime, gameification,providerid,networkid, weight) VALUES " +
+	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, steps, exercisetime, gameification,providerid,networkid) VALUES " +
 				"('" + req.body.firstname + 
 				"','" +req.body.lastname +
 				"','" +req.body.vitalsbph +
 				"','" +req.body.vitalsbpl +
-				"','" +req.body.vitalsweight +
+				"','" +req.body.weight +
 				"','" +req.body.vitalsalcohol +
 				"','" +req.body.status +
 				"','" +req.body.managerid +
@@ -306,12 +355,12 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 				"','" +req.body.steps +
 				"','" +req.body.exercisetime +
 				"','0','" + req.body.providerid +
-				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC"+
-				"','" + req.body.weight+"')";
-	console.log(statement); 
+				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC"+"')";
 	new tempAuth({
 		userEmail: req.body.patientEmail,
-		tempID: Math.floor(Math.random()*90000) + 10000
+		tempID: Math.floor(Math.random()*90000) + 10000,
+		networkID: '$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',
+		userType: 'Patient'
 	}).save(function(err,res){
 		if(err) throw err;
 	});
@@ -330,7 +379,6 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		});
 		client.query('SELECT lastname FROM public.employees WHERE providerid = ($1)', [req.body.providerid], function(err,result){
 			if(err) throw err;
-			console.log(result.rows[0].lastname);
 			client.query('UPDATE public.patients SET providername = ($1) WHERE emrid = ($2)',[result.rows[0].lastname, req.body.emrid], function(err,final){
 				if(err) throw err;
 				console.log('party');

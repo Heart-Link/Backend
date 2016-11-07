@@ -38,8 +38,10 @@ var patientSchema = new Schema({
 	},
 	smoke:{
 		type: Boolean
+	},
+	statusResults:{
+		type: Number  //0-4 = red 4<7 yellow 7< green
 	}
-	
 
 });
 module.exports = mongoose.model('patientEntry',patientSchema);
