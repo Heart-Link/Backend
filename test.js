@@ -452,6 +452,10 @@ app.get('/average',function(req,res){
 //-------------------------------------------|
 
 router.post('/messages/patient/send',function(req,res){ 
+	console.log(req);
+	console.log(req.body);
+
+	res.status(200).json("Message Posted");
 	
 });
 
