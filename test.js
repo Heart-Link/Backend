@@ -486,6 +486,7 @@ router.post('/messages',function(req,res){ // Get a conversation with a patient
 		/* 1. Use EMR ID  to get conversation ID from public.messages
 			2. Get all messages from public.messagecontent with conversationID
 			3. SORT BY MOST RECENT DATE */
+			console.log("HI");
 		async.waterfall(
 			[
 				function getConversationID(callback){
