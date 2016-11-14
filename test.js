@@ -482,8 +482,8 @@ router.post('/messages/id',function(req,res){  // Send a Message from either Web
  	});
 });
  
-router.get('/messages:patient',function(req,res){ // Get a conversation with a patient
-		/* 1. Use EMR ID (passed by Req.query) to get conversation ID from public.messages
+router.post('/messages',function(req,res){ // Get a conversation with a patient
+		/* 1. Use EMR ID  to get conversation ID from public.messages
 			2. Get all messages from public.messagecontent with conversationID
 			3. SORT BY MOST RECENT DATE */
 		async.waterfall(
@@ -494,7 +494,7 @@ router.get('/messages:patient',function(req,res){ // Get a conversation with a p
 								console.log('get Message error: '+ err)
 							}
 							var conversationID; 
-							var statement = "SELECT * FROM public.messages WHERE patientid ="+req.query.patient+"::text";
+							var statement = "SELECT * FROM public.messages WHERE patientid ="+req.body.emrID+"::text";
 
 							client.query(statement,function(err,res){
 								return callback(null,res.rows[0].convoid,res.rows[0]);
