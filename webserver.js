@@ -181,8 +181,6 @@ router.use(function(req,res,next){
 //-------------------------------------------|
 
 router.get('/patientList:id:doc',function(req,res){  // Get list of Patients based off the user ID (either Patient or Manager)
-	console.log(req.query.id);
-	console.log(req.query.doc);
 	pgbae.connect(function(err, client, done){
 		if(err){
 			return console.error('error connecting client to pool: '+ err);
@@ -313,7 +311,7 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 	var sugar = bcrypt.genSaltSync(circularSalt);
 	var genID = bcrypt.hashSync(req.body.emrid, sugar); // Used for messages
 	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.emrid+"','"+req.body.providerid+"','"+req.body.managerid+"')";
-	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, steps, exercisetime, gameification,providerid,networkid) VALUES " +
+	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, flag, steps, exercisetime, gameification,providerid,networkid) VALUES " +
 				"('" + req.body.firstname + 
 				"','" +req.body.lastname +
 				"','" +req.body.vitalsbph +
@@ -326,6 +324,7 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 				"','" +req.body.emrid +
 				"','" +req.body.patientEmail + 
 				"','" +req.body.gender +
+				"','" +"false"+
 				"','" +req.body.steps +
 				"','" +req.body.exercisetime +
 				"','0','" + req.body.providerid +
@@ -377,7 +376,9 @@ router.post('/patients/update', function(req,res){ // Update a Patient from Web 
 		client.release();
 	})
 }); 
+router.post('/patients/flag', function(req,res){
 
+});
 router.delete('/patients/delete', function(req,res){ // Delete a Patient from the Web Portal
 	pgbae.connect(function(err,client,done){
 		client.query('DELETE FROM public.patients WHERE emrid = ($1)', [req.body.patientID], function(err,results){
@@ -543,14 +544,8 @@ router.post('/messages/mobile',function(req,res){ // Get a conversation with a p
 						 	if(err){
 						 		console.log('get Message error: '+ err)
 						 	}
-							var array = [];
 						 	client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[convoID],function(err,data){
-						 		for(var x = 0; x<data.rowCount; x++){
-						 			var inside = []
-						 			inside.push(data.rows[x]);
-						 			array.push(inside);
-						 		}
-						 		res.send(array);
+						 		res.json(data.rows); 
 						 	});
 						 	client.release();
 						 });
