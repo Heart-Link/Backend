@@ -452,6 +452,10 @@ app.get('/average',function(req,res){
 //-------------------------------------------|
 
 router.post('/messages/patient/send',function(req,res){ 
+	console.log(req);
+	console.log(req.body);
+
+	res.status(200).json("Message Posted");
 	
 });
 
@@ -478,10 +482,10 @@ router.post('/messages/id',function(req,res){  // Send a Message from either Web
  	});
 });
  
-router.get('/messages:patient',function(req,res){ // Get a conversation with a patient
-		/* 1. Use EMR ID (passed by Req.query) to get conversation ID from public.messages
+router.post('/messages',function(req,res){ // Get a conversation with a patient
+		/* 1. Use EMR ID  to get conversation ID from public.messages
 			2. Get all messages from public.messagecontent with conversationID
-			3. SORT BY MOST RECENT DATE */
+			3. SORT BY MOST RECENT DATE */	
 		async.waterfall(
 			[
 				function getConversationID(callback){
@@ -490,7 +494,7 @@ router.get('/messages:patient',function(req,res){ // Get a conversation with a p
 								console.log('get Message error: '+ err)
 							}
 							var conversationID; 
-							var statement = "SELECT * FROM public.messages WHERE patientid ="+req.query.patient+"::text";
+							var statement = "SELECT * FROM public.messages WHERE patientid ="+req.body.emrID+"::text";
 
 							client.query(statement,function(err,res){
 								return callback(null,res.rows[0].convoid,res.rows[0]);
@@ -508,6 +512,41 @@ router.get('/messages:patient',function(req,res){ // Get a conversation with a p
 						 	client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[convoID],function(err,data){
 						 		message.push(data.rows);
 						 		res.json(message);
+						 	});
+						 	client.release();
+						 });
+				}
+			]
+		);
+});
+router.post('/messages/mobile',function(req,res){ // Get a conversation with a patient
+		/* 1. Use EMR ID  to get conversation ID from public.messages
+			2. Get all messages from public.messagecontent with conversationID
+			3. SORT BY MOST RECENT DATE */	
+		async.waterfall(
+			[
+				function getConversationID(callback){
+						pgbae.connect(function(err,client,done){
+							if(err){
+								console.log('get Message error: '+ err)
+							}
+							var conversationID; 
+							var statement = "SELECT * FROM public.messages WHERE patientid ="+req.body.emrID+"::text";
+
+							client.query(statement,function(err,res){
+								return callback(null,res.rows[0].convoid,res.rows[0]);
+							});
+							client.release();
+						});
+					},
+				function getMessages(convoID,callback){
+		 			 	pgbae.connect(function(err,client,done){
+						 	if(err){
+						 		console.log('get Message error: '+ err)
+						 	}
+			
+						 	client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[convoID],function(err,data){
+						 		res.json(data.rows);
 						 	});
 						 	client.release();
 						 });
