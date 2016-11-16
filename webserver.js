@@ -532,7 +532,6 @@ router.post('/messages/mobile',function(req,res){ // Get a conversation with a p
 							}
 							var conversationID; 
 							var statement = "SELECT * FROM public.messages WHERE patientid ="+req.body.emrID+"::text";
-
 							client.query(statement,function(err,res){
 								return callback(null,res.rows[0].convoid,res.rows[0]);
 							});
@@ -544,9 +543,14 @@ router.post('/messages/mobile',function(req,res){ // Get a conversation with a p
 						 	if(err){
 						 		console.log('get Message error: '+ err)
 						 	}
-			
+							var array = [];
 						 	client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[convoID],function(err,data){
-						 		res.json(data.rows);
+						 		for(var x = 0; x<data.rowCount; x++){
+						 			var inside = []
+						 			inside.push(data.rows[x]);
+						 			array.push(inside);
+						 		}
+						 		res.send(array);
 						 	});
 						 	client.release();
 						 });
