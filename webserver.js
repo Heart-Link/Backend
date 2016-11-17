@@ -207,7 +207,8 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 									 weight: results.rows[counter].weight,
 									 lastInput: config.objectWizard(entry),
 									 status: results.rows[counter].status,
-									 message: results.rows[counter].convoid
+									 message: results.rows[counter].convoid,
+									 isFlagged: results.rows[counter].flag
 									};
 								counter++;
 								PatientList.push(patient);
@@ -299,7 +300,6 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 	});   // Patient submits Health entry. Add values to mongo and save 
 	res.sendStatus(200);
 });
-
 router.post('/patients/create', function(req,res){   //Create a Patient from Web Portal
 	/* 
 		step 1: make conversation, generate patientID and save the convoID
@@ -361,7 +361,6 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		client.release(); 
 	});   
 });
-
 router.post('/patients/update', function(req,res){ // Update a Patient from Web Portal
 	pgbae.connect(function(err,client,done){
 		client.query('UPDATE public.patients SET vitalsbph = ($1), vitalsbpl = ($2), vitalsweight = ($3), vitalsalcohol = ($4), managerid = ($5), patientEmail = ($6), steps = ($7), exercisetime = ($8), providerid = ($9) WHERE emrid = ($10)',
@@ -377,7 +376,8 @@ router.post('/patients/update', function(req,res){ // Update a Patient from Web 
 	})
 }); 
 router.post('/patients/flag', function(req,res){
-
+	pgbae.query('UPDATE public.patients SET flag = NOT flag WHERE emrid = ($1)',[req.body.id]);
+	res.sendStatus(200);
 });
 router.delete('/patients/delete', function(req,res){ // Delete a Patient from the Web Portal
 	pgbae.connect(function(err,client,done){
@@ -390,7 +390,6 @@ router.delete('/patients/delete', function(req,res){ // Delete a Patient from th
 		client.release();
 	});
 });
-
 router.get('/patients/collect:id',function(req,res){  //  Get an individual patient based off EMR from Web Portal
 	console.log(req.query);
 	var patientID = req.query.id; 
