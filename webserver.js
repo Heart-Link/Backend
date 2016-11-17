@@ -453,25 +453,15 @@ router.post('/messages/patient/send',function(req,res){
 	res.status(200).json("Message Posted");	
 });
 router.post('/messages/id',function(req,res){  // Send a Message from either Web Portal or Phone
- 	/* 
- 	1. get Message , messenger ID and conversationID
- 	2. Use ConversationID as connecting Key 
- 	3. Post message */
- 	var message = req.body.message,
- 		messenger = req.body.messengerID, // Either Doctor, Patient, or Manager.
- 		conversationID = req.body.conversationid; 
-
- 	pgbae.connect(function(err, client, done){
- 		if(err){
- 			console.log('message Post Err: '+err); 
- 		}client.query({
- 			text: "INSERT INTO public.messagecontent (convoid,message,messengerid,timestamp) VALUES ($1, $2, $3, $4)",
- 			values: [conversationID, message, messenger, moment().format()]
- 		});
- 		console.log('message Posted');
- 		res.sendStatus(200);
- 		client.release();
- 	});
+ 	pgbae.connect(function(err,client,done){
+		if(err){
+			console.log('message posted error');
+		}
+		client.query('SELECT convoid FROM public.patients WHERE emrid = ($1)',[req.body.id], function(err,result){
+			client.query('INSERT INTO public.messagecontent (convoid,message,messengerid,timestamp) VALUES ($1,$2,$3,$4)',[result.rows[0].convoid, req.body.message, req.body.messenger, moment().format()]);
+		});
+	});
+	res.status(200).json("Message Posted");	
 });
 router.post('/messages',function(req,res){ // Get a conversation with a patient
 		/* 1. Use EMR ID  to get conversation ID from public.messages
