@@ -38,8 +38,6 @@ mongoose.connect(config.mongo);
 //------------User Authentication------------|
 //-------------------------------------------|
 //-------------------------------------------|
-
-
 app.post('/login', function(req,res){
 	async.waterfall([
 			function iscorrect(callback){
@@ -76,7 +74,6 @@ app.post('/login', function(req,res){
 			}
 	]);
 });
-
 app.post('/login/patient', function(req,res){
 	async.waterfall([
 			function iscorrect(callback){
@@ -179,7 +176,6 @@ router.use(function(req,res,next){
 // 											 |
 // 											 |
 //-------------------------------------------|
-
 router.get('/patientList:id:doc',function(req,res){  // Get list of Patients based off the user ID (either Patient or Manager)
 	pgbae.connect(function(err, client, done){
 		if(err){
@@ -254,10 +250,8 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 											convertAndSend(PatientList);
 										}
 								});
-						
 							}	
 						}
-						
 						function convertAndSend(PatientList){
 							res.status(200).send(PatientList)
 						}	
@@ -269,7 +263,6 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
  		 console.error('idle client error', err.message, err.stack)
 	});
 });
-
 router.post('/patient/submitData', function(req,res){   //Patient Submitting Daily Entry from their iPhone
 	helper.runAnalysis(req.body).then(function(score){
 		var entry = new patientEntry({
@@ -307,30 +300,30 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		step 3: save all 
 		Notes: GenID is for messages, using EMRID for all patient ID needs
 		*/
-	console.log(req.body);
+	
 	var sugar = bcrypt.genSaltSync(circularSalt);
-	var genID = bcrypt.hashSync(req.body.emrid, sugar); // Used for messages
-	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.emrid+"','"+req.body.providerid+"','"+req.body.managerid+"')";
+	var genID = bcrypt.hashSync(req.body.data.emrid, sugar); // Used for messages
+	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.data.emrid+"','"+req.body.data.providerid+"','"+req.body.data.managerid+"')";
 	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, flag, steps, exercisetime, gameification,providerid,networkid) VALUES " +
-				"('" + req.body.firstname + 
-				"','" +req.body.lastname +
-				"','" +req.body.vitalsbph +
-				"','" +req.body.vitalsbpl +
-				"','" +req.body.weight +
-				"','" +req.body.vitalsalcohol +
-				"','" +req.body.status +
-				"','" +req.body.managerid +
+				"('" + req.body.data.firstname + 
+				"','" +req.body.data.lastname +
+				"','" +req.body.data.vitalsbph +
+				"','" +req.body.data.vitalsbpl +
+				"','" +req.body.data.weight +
+				"','" +req.body.data.vitalsalcohol +
+				"','" +req.body.data.status +
+				"','" +req.body.data.managerid +
 				"','" +genID +
-				"','" +req.body.emrid +
-				"','" +req.body.patientEmail + 
-				"','" +req.body.gender +
+				"','" +req.body.data.emrid +
+				"','" +req.body.data.patientEmail + 
+				"','" +req.body.data.gender +
 				"','" +"false"+
-				"','" +req.body.steps +
-				"','" +req.body.exercisetime +
-				"','0','" + req.body.providerid +
+				"','" +req.body.data.steps +
+				"','" +req.body.data.exercisetime +
+				"','0','" + req.body.data.providerid +
 				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC"+"')";
 	new tempAuth({
-		userEmail: req.body.patientEmail,
+		userEmail: req.body.data.patientEmail,
 		tempID: Math.floor(Math.random()*90000) + 10000,
 		networkID: '$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',
 		userType: 'Patient'
@@ -412,7 +405,6 @@ router.get('/patients/collect:id',function(req,res){  //  Get an individual pati
 		}
 		]);
 });
-
 app.get('/average',function(req,res){
 	var heartRateArray = [];
 	var stressLevelArr = [];
@@ -446,20 +438,20 @@ app.get('/average',function(req,res){
 		res.json(averagePatient);
 	});
 });
-
 //-------------------------------------------|
 // Message System Routes					 |
 //-------------------------------------------|
-
 router.post('/messages/patient/send',function(req,res){ 
-	console.log(req);
-	console.log(req.body);
-
-	res.status(200).json("Message Posted");
-	
+	pgbae.connect(function(err,client,done){
+		if(err){
+			console.log('message posted error');
+		}
+		client.query('SELECT convoid FROM public.patients WHERE emrid = ($1)',[req.body.emrID], function(err,result){
+			client.query('INSERT INTO public.messagecontent (convoid,message,messengerid,timestamp) VALUES ($1,$2,$3,$4)',[result.rows[0].convoid, req.body.message, req.body.emrID, moment().format()]);
+		});
+	});
+	res.status(200).json("Message Posted");	
 });
-
-
 router.post('/messages/id',function(req,res){  // Send a Message from either Web Portal or Phone
  	/* 
  	1. get Message , messenger ID and conversationID
@@ -481,7 +473,6 @@ router.post('/messages/id',function(req,res){  // Send a Message from either Web
  		client.release();
  	});
 });
- 
 router.post('/messages',function(req,res){ // Get a conversation with a patient
 		/* 1. Use EMR ID  to get conversation ID from public.messages
 			2. Get all messages from public.messagecontent with conversationID
@@ -566,7 +557,6 @@ router.post('/network/create', function(req,res){
 	    });
 	});
 });
-
 app.post('/makeEmployee',function(req,res){
 	var salty = bcrypt.genSaltSync(circularSalt);
 	var employee = {
@@ -596,11 +586,9 @@ app.post('/makeEmployee',function(req,res){
 		if(err) throw err;
 	});
 });
-
-router.get('/',function(req,res){
+app.get('/',function(req,res){
 	res.json({ message: 'Less than 2 months til Final presentaion'});
 });
-
 app.use('/',function(req,res,next){
 	res.header("Access-Control-Allow-Origin", "*");
 	res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept");
