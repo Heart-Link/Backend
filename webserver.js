@@ -491,6 +491,7 @@ router.post('/messages',function(req,res){ // Get a conversation with a patient
 						 	var message = [];
 						 	message.push(callback);
 						 	client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[convoID],function(err,data){
+						 		console.log(data.rows);
 						 		res.json(data.rows);
 						 	});
 						 	client.release();
