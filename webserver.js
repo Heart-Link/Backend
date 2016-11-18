@@ -478,7 +478,7 @@ router.post('/messages',function(req,res){ // Get a conversation with a patient
 							console.log(req.body.id);
 							
 
-							client.query("SELECT * FROM public.messages WHERE patientid = ($1)",[req.body.id],function(err,res){
+							client.query("SELECT * FROM public.messages WHERE patient = ($1)",[req.body.id],function(err,res){
 								if(err) throw err; 
 								console.log(res); 
 								return callback(null,res.rows[0].convoid,res.rows[0]);
