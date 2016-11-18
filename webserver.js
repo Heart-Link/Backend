@@ -446,7 +446,7 @@ router.post('/messages/patient/send',function(req,res){
 		if(err){
 			console.log('message posted error');
 		}
-		client.query('SELECT convoid FROM public.patients WHERE emrid = ($1)',[req.body.emrID], function(err,result){
+		client.query('SELECT convoid FROM public.patients WHERE emrid = ($1)',[req.body.emrid], function(err,result){
 			client.query('INSERT INTO public.messagecontent (convoid,message,messengerid,timestamp) VALUES ($1,$2,$3,$4)',[result.rows[0].convoid, req.body.message, req.body.emrID, moment().format()]);
 		});
 	});
