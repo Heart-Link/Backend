@@ -479,6 +479,8 @@ router.post('/messages',function(req,res){ // Get a conversation with a patient
 							var statement = "SELECT * FROM public.messages WHERE patientid ="+req.body.id+"::text";
 
 							client.query(statement,function(err,res){
+								if(err) throw err; 
+								console.log(res); 
 								return callback(null,res.rows[0].convoid,res.rows[0]);
 							});
 							client.release();
