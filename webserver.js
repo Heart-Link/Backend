@@ -478,7 +478,7 @@ router.post('/messages',function(req,res){ // Get a conversation with a patient
 							console.log(req.body.id);
 							
 
-							client.query("SELECT * FROM public.messages WHERE patient = ($1)",[req.body.id],function(err,res){
+							client.query("SELECT * FROM public.messages WHERE patientid = ($1)",[req.body.id],function(err,res){
 								if(err) throw err; 
 								console.log(res); 
 								return callback(null,res.rows[0].convoid,res.rows[0]);
@@ -515,9 +515,8 @@ router.post('/messages/mobile',function(req,res){ // Get a conversation with a p
 								console.log('get Message error: '+ err)
 							}
 							var conversationID; 
-							var statement = "SELECT * FROM public.messages WHERE patientid ="+req.body.emrID+"::text";
-							client.query(statement,function(err,res){
-								return callback(null,res.rows[0].convoid,res.rows[0]);
+							client.query("SELECT * FROM public.messages WHERE patientid = ($1)",[req.body.emrID],function(err,result){
+								return callback(null,result.rows[0].convoid);
 							});
 							client.release();
 						});
