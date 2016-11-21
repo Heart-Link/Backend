@@ -293,6 +293,36 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 	});   // Patient submits Health entry. Add values to mongo and save 
 	res.sendStatus(200);
 });
+router.post('/patient/submitData/loader', function(req,res){   //Patient Submitting Daily Entry from their iPhone
+	helper.runAnalysis(req.body).then(function(score){
+		var entry = new patientEntry({
+			patientID : req.body.patientID,
+			entryInfo : req.body.entryInfo,
+			bpHigh: req.body.bpHigh,
+			bpLow:req.body.bpLow,
+			weight:req.body.weight,
+			exerciseTime:req.body.exerciseTime,
+			alcoholIntake:req.body.alcoholIntake,
+			steps: req.body.steps,
+			averageHR: req.body.averageHR,
+			stressLevel:req.body.stressLevel,
+			smoke:req.body.smoke,
+			statusResults:score
+		});
+		entry.save(function(err){
+			if(err) throw err;
+			console.log('Patient Entry submitted');
+		});
+	});
+	pgbae.connect(function(err,client,done){
+		client.query('UPDATE public.patients SET gameification = gameification + 1 WHERE emrid = ($1)',[req.body.patientID],function(err,res){
+			if(err) throw err;
+			console.log(res);    
+		});
+		client.release();
+	});   // Patient submits Health entry. Add values to mongo and save 
+	res.sendStatus(200);
+});
 router.post('/patients/create', function(req,res){   //Create a Patient from Web Portal
 	/* 
 		step 1: make conversation, generate patientID and save the convoID
