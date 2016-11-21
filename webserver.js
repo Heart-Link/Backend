@@ -27,6 +27,7 @@ var port = process.env.PORT || 8080;
 // ------------- include Models -------------------
 
 const patientEntry = require('./models/patientEntry.js');
+const patientEntryOld = require('./models/patientEntryOld.js');
 const account = require('./models/account.js'); 
 const tempAuth = require('./models/tempAuth.js');
 const pgbae = new Pool(config.postgresConfig);
@@ -295,7 +296,7 @@ router.post('/patient/submitData', function(req,res){   //Patient Submitting Dai
 });
 router.post('/patient/submitData/loader', function(req,res){   //Patient Submitting Daily Entry from their iPhone
 	helper.runAnalysis(req.body).then(function(score){
-		var entry = new patientEntry({
+		var entryData = new patientEntryOld({
 			patientID : req.body.patientID,
 			entryInfo : req.body.entryInfo,
 			bpHigh: req.body.bpHigh,
@@ -309,7 +310,7 @@ router.post('/patient/submitData/loader', function(req,res){   //Patient Submitt
 			smoke:req.body.smoke,
 			statusResults:score
 		});
-		entry.save(function(err){
+		entryData.save(function(err){
 			if(err) throw err;
 			console.log('Patient Entry submitted');
 		});

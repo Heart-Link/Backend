@@ -10,7 +10,6 @@ var patientSchema = new Schema({
 	},
 	entryInfo:{
 		type: String,
-		default: moment().format()
 	},
 	bpHigh:{
 		type: Number
