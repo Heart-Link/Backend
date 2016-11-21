@@ -384,6 +384,67 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		client.release(); 
 	});   
 });
+router.post('/patients/create:token', function(req,res){   //Create a Patient from Web Portal
+	/* 
+		step 1: make conversation, generate patientID and save the convoID
+		step 2: make patient and input information
+		step 3: save all 
+		Notes: GenID is for messages, using EMRID for all patient ID needs
+		*/
+	
+	var sugar = bcrypt.genSaltSync(circularSalt);
+	var genID = bcrypt.hashSync(req.body.data.emrid, sugar); // Used for messages
+	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.data.emrid+"','"+req.body.data.providerid+"','"+req.body.data.managerid+"')";
+	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, flag, steps, exercisetime, gameification,providerid,networkid) VALUES " +
+				"('" + req.body.data.firstname + 
+				"','" +req.body.data.lastname +
+				"','" +req.body.data.vitalsbph +
+				"','" +req.body.data.vitalsbpl +
+				"','" +req.body.data.weight +
+				"','" +req.body.data.vitalsalcohol +
+				"','" +req.body.data.status +
+				"','" +req.body.data.managerid +
+				"','" +genID +
+				"','" +req.body.data.emrid +
+				"','" +req.body.data.patientEmail + 
+				"','" +req.body.data.gender +
+				"','" +"false"+
+				"','" +req.body.data.steps +
+				"','" +req.body.data.exercisetime +
+				"','0','" + req.body.data.providerid +
+				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC"+"')";
+	new tempAuth({
+		userEmail: req.body.data.patientEmail,
+		tempID: Math.floor(Math.random()*90000) + 10000,
+		networkID: '$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',
+		userType: 'Patient'
+	}).save(function(err,res){
+		if(err) throw err;
+	});
+	pgbae.connect(function(err,client,done){
+		if(err){
+			return console.error('error connecting client to pool: '+ err);
+		}
+		var providerName,
+			mangerName;
+
+		client.query(convo, function(err,result){ // SEND create Message Command
+			if(err) throw err;
+		});
+		client.query(statement,function(err,result){ // send Create Patient Command
+			if(err) throw err;
+		});
+		client.query('SELECT lastname FROM public.employees WHERE providerid = ($1)', [req.body.providerid], function(err,result){
+			if(err) throw err;
+			client.query('UPDATE public.patients SET providername = ($1) WHERE emrid = ($2)',[result.rows[0].lastname, req.body.emrid], function(err,final){
+				if(err) throw err;
+				console.log('party');
+			})
+		})
+		res.status(200).json("Patient Added Successfully"); 
+		client.release(); 
+	});   
+});
 router.post('/patients/update', function(req,res){ // Update a Patient from Web Portal
 	pgbae.connect(function(err,client,done){
 		client.query('UPDATE public.patients SET vitalsbph = ($1), vitalsbpl = ($2), vitalsweight = ($3), vitalsalcohol = ($4), managerid = ($5), patientEmail = ($6), steps = ($7), exercisetime = ($8), providerid = ($9) WHERE emrid = ($10)',
