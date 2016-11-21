@@ -41,4 +41,4 @@ var patientSchema = new Schema({
 	
 
 });
-module.exports = mongoose.model('patientEntry',patientSchema);
+module.exports = mongoose.model('patientEntryOld',patientSchema);
