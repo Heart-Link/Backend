@@ -7,9 +7,9 @@ userId = input("user ID?")
 y = input("Number of records");
 
 for number in range(1,y+1):
-	record = requests.post('http://ec2-54-163-104-129.compute-1.amazonaws.com:8080/api/patient/submitData/loader', data ={
+	record = requests.post('http://ec2-54-163-104-129.compute-1.amazonaws.com:8080/api/patient/submitData/', data ={
 		'patientID': userId,
-		'entryInfo': '2016-10-'+str(number)+'T15:14:52-04:00',
+	#'entryInfo': '2016-10-'+str(number)+'T15:14:52-04:00',
 		'bpHigh': randint(116,130),
 		'bpLow': randint(68,90),
 		'weight': randint(170, 185),
