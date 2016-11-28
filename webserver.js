@@ -13,8 +13,8 @@ const async = require('async');
 const config = require('./config');
 const helper = require('./helper'); 
 const apn = require('apn'); 
-require('events').EventEmitter.prototype._maxListeners = 100;
-
+const nodemailer = require('nodemailer'); 
+const transporter = nodemailer.createTransport('smtps://heartlinkucf@gmail.com:SeniorDesign@smtp.gmail.com');
 const jwt = require('jsonwebtoken');
 
 app.use(bodyparser.urlencoded({ extended: true}));
@@ -31,6 +31,7 @@ const account = require('./models/account.js');
 const tempAuth = require('./models/tempAuth.js');
 const pgbae = new Pool(config.postgresConfig);
 mongoose.connect(config.mongo);
+
 
 
 //-------------------------------------------|
@@ -121,9 +122,6 @@ app.post('/login/patient', function(req,res){
 
 	console.log(req.body);
 })
-app.get('/logout', function(req,res){
-
-});
 app.post('/register', function(req,res){ // Make this async
 	var result = "success"; 
 	tempAuth.findOne({userEmail: req.body.email}, function(err,result){
@@ -192,10 +190,19 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 					var patientCount = results.rowCount;
 					for(x = 0; x<patientCount;x++){
 						var counter = 0;
+						console.log(results.rows[counter]);
 						patientEntry.find({"patientID":results.rows[x].emrid}).sort({"entryInfo": -1}).limit(1).exec(function(err,entry){
 								var patient = {
 									 firstName: results.rows[counter].firstname,
 									 lastName: results.rows[counter].lastname,
+									 vitalsbph: results.rows[counter].vitalsbph,
+									 vitalsbpl: results.rows[counter].vitalsbpl,
+									 vitalsalcohol: results.rows[counter].vitalsalcohol,
+									 gameification: results.rows[counter].gameification,
+									 patientemail: results.rows[counter].patientemail,
+									 gender: results.rows[counter].gender,
+									 steps: results.rows[counter].steps,
+									 exercisetime: results.rows[counter].exercisetime,
 									 pid: results.rows[counter].emrid,
 									 provider: results.rows[counter].providername,
 									 sex: results.rows[counter].gender,
@@ -324,13 +331,6 @@ router.post('/patient/submitData/loader', function(req,res){   //Patient Submitt
 	res.sendStatus(200);
 });
 router.post('/patients/create', function(req,res){   //Create a Patient from Web Portal
-	/* 
-		step 1: make conversation, generate patientID and save the convoID
-		step 2: make patient and input information
-		step 3: save all 
-		Notes: GenID is for messages, using EMRID for all patient ID needs
-		*/
-	
 	var sugar = bcrypt.genSaltSync(circularSalt);
 	var genID = bcrypt.hashSync(req.body.data.emrid, sugar); // Used for messages
 	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.data.emrid+"','"+req.body.data.providerid+"','"+req.body.data.managerid+"')";
@@ -345,16 +345,17 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 				"','" +req.body.data.managerid +
 				"','" +genID +
 				"','" +req.body.data.emrid +
-				"','" +req.body.data.patientEmail + 
+				"','" +req.body.data.patientemail + 
 				"','" +req.body.data.gender +
 				"','" +"false"+
 				"','" +req.body.data.steps +
 				"','" +req.body.data.exercisetime +
 				"','0','" + req.body.data.providerid +
 				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC"+"')";
+	var regVal = Math.floor(Math.random()*90000) + 10000;			
 	new tempAuth({
 		userEmail: req.body.data.patientEmail,
-		tempID: Math.floor(Math.random()*90000) + 10000,
+		tempID: regVal,
 		networkID: '$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',
 		userType: 'Patient'
 	}).save(function(err,res){
@@ -383,72 +384,26 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		res.status(200).json("Patient Added Successfully"); 
 		client.release(); 
 	});   
-});
-router.post('/patients/create:token', function(req,res){   //Create a Patient from Web Portal
-	/* 
-		step 1: make conversation, generate patientID and save the convoID
-		step 2: make patient and input information
-		step 3: save all 
-		Notes: GenID is for messages, using EMRID for all patient ID needs
-		*/
-	
-	var sugar = bcrypt.genSaltSync(circularSalt);
-	var genID = bcrypt.hashSync(req.body.data.emrid, sugar); // Used for messages
-	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.data.emrid+"','"+req.body.data.providerid+"','"+req.body.data.managerid+"')";
-	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, flag, steps, exercisetime, gameification,providerid,networkid) VALUES " +
-				"('" + req.body.data.firstname + 
-				"','" +req.body.data.lastname +
-				"','" +req.body.data.vitalsbph +
-				"','" +req.body.data.vitalsbpl +
-				"','" +req.body.data.weight +
-				"','" +req.body.data.vitalsalcohol +
-				"','" +req.body.data.status +
-				"','" +req.body.data.managerid +
-				"','" +genID +
-				"','" +req.body.data.emrid +
-				"','" +req.body.data.patientEmail + 
-				"','" +req.body.data.gender +
-				"','" +"false"+
-				"','" +req.body.data.steps +
-				"','" +req.body.data.exercisetime +
-				"','0','" + req.body.data.providerid +
-				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC"+"')";
-	new tempAuth({
-		userEmail: req.body.data.patientEmail,
-		tempID: Math.floor(Math.random()*90000) + 10000,
-		networkID: '$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',
-		userType: 'Patient'
-	}).save(function(err,res){
-		if(err) throw err;
-	});
-	pgbae.connect(function(err,client,done){
-		if(err){
-			return console.error('error connecting client to pool: '+ err);
-		}
-		var providerName,
-			mangerName;
 
-		client.query(convo, function(err,result){ // SEND create Message Command
-			if(err) throw err;
-		});
-		client.query(statement,function(err,result){ // send Create Patient Command
-			if(err) throw err;
-		});
-		client.query('SELECT lastname FROM public.employees WHERE providerid = ($1)', [req.body.providerid], function(err,result){
-			if(err) throw err;
-			client.query('UPDATE public.patients SET providername = ($1) WHERE emrid = ($2)',[result.rows[0].lastname, req.body.emrid], function(err,final){
-				if(err) throw err;
-				console.log('party');
-			})
-		})
-		res.status(200).json("Patient Added Successfully"); 
-		client.release(); 
-	});   
+	const mailOptions = {
+	    from: '"HeartLink Registration" <heartlinkucf@gmail.com>', // sender address
+	    to: req.body.patientEmail, // list of receivers
+	    subject: 'Welcome to HeartLink', // Subject line
+	    text: 'Hello and Welcome to HeartLink! Please use Registration Code '+regVal+' to create an account. ', // plaintext body
+	    html: '<b>Hello and Welcome to HeartLink! Please use Registration Code'+regVal+' to create an account.</b>' // html body
+	};
+
+	transporter.sendMail(mailOptions, function(error, info){
+	    if(error){
+	        return console.log(error);
+	    }
+	    console.log('Message sent: ' + info.response);
+	});
 });
 router.post('/patients/update', function(req,res){ // Update a Patient from Web Portal
 	pgbae.connect(function(err,client,done){
-		client.query('UPDATE public.patients SET vitalsbph = ($1), vitalsbpl = ($2), vitalsweight = ($3), vitalsalcohol = ($4), managerid = ($5), patientEmail = ($6), steps = ($7), exercisetime = ($8), providerid = ($9) WHERE emrid = ($10)',
-			[req.body.vitalsbph, req.body.vitalsbpl, req.body.vitalsweight, req.body.vitalsalcohol, req.body.managerid, req.body.patientEmail, req.body.steps, req.body.exercise, req.body.providerid, req.body.patientID],
+		client.query('UPDATE public.patients SET vitalsbph = ($1), vitalsbpl = ($2), weight = ($3), vitalsalcohol = ($4), managerid = ($5), patientEmail = ($6), steps = ($7), exercisetime = ($8), providerid = ($9), dob = ($10), firstname = ($11), lastname = ($12), gender($13) WHERE emrid = ($14)',
+			[req.body.data.vitalsbph, req.body.data.vitalsbpl, req.body.data.vitalsweight, req.body.data.vitalsalcohol, req.body.data.managerid, req.body.data.patientemail, req.body.data.steps, req.body.data.exercise, req.body.data.providerid, req.body.data.dob, req.body.data.firstname, req.body.data.lastname, req.body.data.gender, req.body.data.emrid],
 			function(err,results){
 				if(err){
 					throw err;
