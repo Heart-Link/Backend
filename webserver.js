@@ -51,9 +51,12 @@ app.get('/test', function(req,res){
 	note.payload = {'messageFrom': 'John Appleseed'};
 	note.topic = "Pickering.HeartLink";
 
-	apnProvider.send(note, deviceToken).then( (result) => {
-	  // see documentation for an explanation of result
+	apnProvider.send(note, '365f09885fc38f89225996080b631e5ca54531319d4a46121a754aed0f56fcb6').then( (result) => {
+		//if(err) throw err;
+	  	console.log(result);
 	});
+
+	console.log("hi");
 });
 //-------------------------------------------|
 //-------------------------------------------|
@@ -544,6 +547,40 @@ router.post('/messages',function(req,res){ // Get a conversation with a patient
 							}
 							var conversationID;
 							client.query("SELECT * FROM public.messages WHERE patientid = ($1)",[req.body.id],function(err,res){
+								if(err) throw err; 
+								return callback(null,res.rows[0].convoid,res.rows[0]);
+							});
+							client.release();
+						});
+					},
+				function getMessages(convoID, idValues, callback){
+						console.log(idValues);
+		 			 	pgbae.connect(function(err,client,done){
+						 	if(err){
+						 		console.log('get Message error: '+ err)
+						 	}
+						 	var message = [];
+						 	message.push(callback);
+						 	client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[convoID],function(err,data){
+						 		var newFormat = helper.formatMessages(idValues, data.rows);
+						 		res.json(newFormat);
+						 	});
+						 	client.release();
+						 });
+				}
+			]
+		);
+});
+router.get('/messages/mobile:id:token',function(req,res){ // Get a conversation with a patient
+		async.waterfall(
+			[
+				function getConversationID(callback){
+						pgbae.connect(function(err,client,done){
+							if(err){
+								console.log('get Message error: '+ err)
+							}
+							var conversationID;
+							client.query("SELECT * FROM public.messages WHERE patientid = ($1)",[req.query.id],function(err,res){
 								if(err) throw err; 
 								return callback(null,res.rows[0].convoid,res.rows[0]);
 							});
