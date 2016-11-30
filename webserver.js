@@ -32,8 +32,29 @@ const tempAuth = require('./models/tempAuth.js');
 const pgbae = new Pool(config.postgresConfig);
 mongoose.connect(config.mongo);
 
+const apnProvider = new apn.Provider({
+	token: {
+		key: 'APNsAuthKey_42562SC893',
+		keyId: '42562SC893', 
+		teamId: '9NTVF3V67K'
+	},
+	production: false
+});
 
+app.get('/test', function(req,res){
+	var note = new apn.Notification();
 
+	note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+	note.badge = 3;
+	note.sound = "ping.aiff";
+	note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
+	note.payload = {'messageFrom': 'John Appleseed'};
+	note.topic = "Pickering.HeartLink";
+
+	apnProvider.send(note, deviceToken).then( (result) => {
+	  // see documentation for an explanation of result
+	});
+});
 //-------------------------------------------|
 //-------------------------------------------|
 //------------User Authentication------------|
@@ -504,13 +525,13 @@ router.post('/messages/id',function(req,res){  // Send a Message from Web Portal
 			console.log('message posted error');
 		}
 		client.query('SELECT convoid FROM public.patients WHERE emrid = ($1)',[req.body.id], function(err,result){
-			console.log(result.rows[0].convoid);
 			client.query('INSERT INTO public.messagecontent1 (convoid,message,messengerid,timestamp) VALUES ($1,$2,$3,$4)',[result.rows[0].convoid, req.body.message, req.body.messenger, moment().format()],function(err,result1){
-				if(err) throw err;
-				console.log("hi");
+				if(err) throw err;	
 			});
 		});
 	});
+
+	
 	res.status(200).json("Message Posted");	
 });
 router.post('/messages',function(req,res){ // Get a conversation with a patient
