@@ -34,7 +34,7 @@ mongoose.connect(config.mongo);
 
 const apnProvider = new apn.Provider({
 	token: {
-		key: 'APNsAuthKey_42562SC893',
+		key: 'APNsAuthKey_42562SC893.p8',
 		keyId: '42562SC893', 
 		teamId: '9NTVF3V67K'
 	},
