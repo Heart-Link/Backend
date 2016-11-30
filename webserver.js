@@ -498,21 +498,22 @@ router.post('/messages/patient/send',function(req,res){
 	});
 	res.status(200).json("Message Posted");	
 });
-router.post('/messages/id',function(req,res){  // Send a Message from either Web Portal or Phone
+router.post('/messages/id',function(req,res){  // Send a Message from Web Portal
  	pgbae.connect(function(err,client,done){
 		if(err){
 			console.log('message posted error');
 		}
 		client.query('SELECT convoid FROM public.patients WHERE emrid = ($1)',[req.body.id], function(err,result){
-			client.query('INSERT INTO public.messagecontent (convoid,message,messengerid,timestamp) VALUES ($1,$2,$3,$4)',[result.rows[0].convoid, req.body.message, req.body.messenger, moment().format()]);
+			console.log(result.rows[0].convoid);
+			client.query('INSERT INTO public.messagecontent1 (convoid,message,messengerid,timestamp) VALUES ($1,$2,$3,$4)',[result.rows[0].convoid, req.body.message, req.body.messenger, moment().format()],function(err,result1){
+				if(err) throw err;
+				console.log("hi");
+			});
 		});
 	});
 	res.status(200).json("Message Posted");	
 });
 router.post('/messages',function(req,res){ // Get a conversation with a patient
-		/* 1. Use EMR ID  to get conversation ID from public.messages
-			2. Get all messages from public.messagecontent with conversationID
-			3. SORT BY MOST RECENT DATE */	
 		async.waterfall(
 			[
 				function getConversationID(callback){
@@ -520,19 +521,16 @@ router.post('/messages',function(req,res){ // Get a conversation with a patient
 							if(err){
 								console.log('get Message error: '+ err)
 							}
-							var conversationID; 
-							console.log(req.body.id);
-							
-
+							var conversationID;
 							client.query("SELECT * FROM public.messages WHERE patientid = ($1)",[req.body.id],function(err,res){
 								if(err) throw err; 
-								console.log(res); 
 								return callback(null,res.rows[0].convoid,res.rows[0]);
 							});
 							client.release();
 						});
 					},
-				function getMessages(convoID,callback){
+				function getMessages(convoID, idValues, callback){
+						console.log(idValues);
 		 			 	pgbae.connect(function(err,client,done){
 						 	if(err){
 						 		console.log('get Message error: '+ err)
@@ -540,8 +538,8 @@ router.post('/messages',function(req,res){ // Get a conversation with a patient
 						 	var message = [];
 						 	message.push(callback);
 						 	client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[convoID],function(err,data){
-						 		console.log(data.rows);
-						 		res.json(data.rows);
+						 		var newFormat = helper.formatMessages(idValues, data.rows);
+						 		res.json(newFormat);
 						 	});
 						 	client.release();
 						 });

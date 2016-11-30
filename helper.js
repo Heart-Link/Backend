@@ -46,6 +46,46 @@ module.exports = {
 				resolve(resultCounter);
 			});
 		});
+	},
+	formatMessages: function(idKeys, messages){
+		var provider = idKeys.providerid;
+		var manager = idKeys.managerid; 
+		var patient = idKeys.patientid;
+
+		var newFormat = [];
+		for(x = 0; x<messages.length; x++){
+			if(messages[x].messengerid === patient){
+				var msgToAppend = {
+					'convoid' : messages[x].convoid,
+					'messengerid' : messages[x].messengerid,
+					'reduxid' : 0,
+					'message' : messages[x].message,
+					'timestamp' : messages[x].timestamp
+				};
+				newFormat.push(msgToAppend);
+			}
+			else if(messages[x].messengerid === manager){
+				var msgToAppend = {
+					'convoid' : messages[x].convoid,
+					'messengerid' : messages[x].messengerid,
+					'reduxid' : 1,
+					'message' : messages[x].message,
+					'timestamp' : messages[x].timestamp
+				};
+				newFormat.push(msgToAppend);
+			}  
+			else if(messages[x].messengerid === provider){
+				var msgToAppend = {
+					'convoid' : messages[x].convoid,
+					'messengerid' : messages[x].messengerid,
+					'reduxid' : 2,
+					'message' : messages[x].message,
+					'timestamp' : messages[x].timestamp
+				};
+				newFormat.push(msgToAppend);
+			} 
+		}
+		return newFormat;
 	}
 	
 }
