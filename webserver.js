@@ -32,14 +32,16 @@ const tempAuth = require('./models/tempAuth.js');
 const pgbae = new Pool(config.postgresConfig);
 mongoose.connect(config.mongo);
 
-const apnProvider = new apn.Provider({
+var options = {
 	token: {
-		key: 'APNsAuthKey_42562SC893.p8',
+		key: './APNsAuthKey_42562SC893.p8',
 		keyId: '42562SC893', 
 		teamId: '9NTVF3V67K'
 	},
 	production: false
-});
+};
+
+const apnProvider = new apn.Provider(options);
 
 app.get('/test', function(req,res){
 	var note = new apn.Notification();
@@ -48,12 +50,14 @@ app.get('/test', function(req,res){
 	note.badge = 3;
 	note.sound = "ping.aiff";
 	note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
-	note.payload = {'messageFrom': 'John Appleseed'};
+	note.payload = {'id': 123};
 	note.topic = "Pickering.HeartLink";
+	var token = "1d9c174864690f00e12f46aefd0b13b0691a8ca8";
 
-	apnProvider.send(note, '365f09885fc38f89225996080b631e5ca54531319d4a46121a754aed0f56fcb6').then( (result) => {
-		//if(err) throw err;
+	apnProvider.send(note, token).then((result) => {
 	  	console.log(result);
+	  	console.log(result.failed);
+	  	apnProvider.shutdown();
 	});
 
 	console.log("hi");
@@ -100,6 +104,7 @@ app.post('/login', function(req,res){
 	]);
 });
 app.post('/login/patient', function(req,res){
+	console.log(req.body);
 	async.waterfall([
 			function iscorrect(callback){
 				account.findOne({ userEmail: req.body.email },function(err,record){
