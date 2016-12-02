@@ -411,18 +411,18 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 
 	
 	var regVal = Math.floor(Math.random()*90000) + 10000;			
-	new tempAuth({
-		bcrypt.genSalt(circularSalt,function(err,salt){
-			bcrypt.hash(regVal,salt, function(err,hash){
-				userEmail: req.body.data.patientEmail,
-				password: hash,
-				networkID: '$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',
-				userType: 'Patient',
-				deviceID: ''
-			}).save(function(err,res){
-				if(err) throw err;
-				console.log('User Registration submitted');
-			});
+	bcrypt.genSalt(circularSalt,function(err,salt){
+		bcrypt.hash(regVal,salt, function(err,hash){
+			new tempAuth({
+						userEmail: req.body.data.patientEmail,
+						password: hash,
+						networkID: '$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',
+						userType: 'Patient',
+						deviceID: ''
+					}).save(function(err,res){
+						if(err) throw err;
+						console.log('User Registration submitted');
+				});
 		});
 	});
 		
@@ -564,7 +564,7 @@ router.post('/messages',function(req,res){ // Get a conversation with a patient
 							var conversationID;
 							client.query("SELECT * FROM public.messages WHERE patientid = ($1)",[req.body.id],function(err,res){
 								if(err) throw err; 
-								if(res=)
+						
 								return callback(null,res.rows[0].convoid,res.rows[0]);
 							});
 							client.release();
