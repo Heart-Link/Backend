@@ -34,8 +34,8 @@ mongoose.connect(config.mongo);
 
 var options = {
 	token: {
-		key: './APNsAuthKey_42562SC893.p8',
-		keyId: '42562SC893', 
+		key: 'APNsAuthKey_2A74WX86H2.p8',
+		keyId: '2A74WX86H2', 
 		teamId: '9NTVF3V67K'
 	},
 	production: false
@@ -52,7 +52,8 @@ app.get('/test', function(req,res){
 	note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
 	note.payload = {'id': 123};
 	note.topic = "Pickering.HeartLink";
-	var token = "1d9c174864690f00e12f46aefd0b13b0691a8ca8";
+	var token = "fecc4ecebffd3f1dc745732b4101907154ab766eeede9e4c1da29bec2b15971d";
+
 
 	apnProvider.send(note, token).then((result) => {
 	  	console.log(result);
@@ -226,6 +227,7 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 									 lastName: results.rows[counter].lastname,
 									 vitalsbph: results.rows[counter].vitalsbph,
 									 vitalsbpl: results.rows[counter].vitalsbpl,
+									 vitalsbpm: results.rows[counter].vitalsbpm,
 									 vitalsalcohol: results.rows[counter].vitalsalcohol,
 									 gameification: results.rows[counter].gameification,
 									 patientemail: results.rows[counter].patientemail,
