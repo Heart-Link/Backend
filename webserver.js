@@ -242,7 +242,8 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 									 lastInput: config.objectWizard(entry),
 									 status: results.rows[counter].status,
 									 message: results.rows[counter].convoid,
-									 isFlagged: results.rows[counter].flag
+									 isFlagged: results.rows[counter].flag,
+									 messagecount: results.rows[counter].messagecount
 									};
 								counter++;
 								PatientList.push(patient);
@@ -364,7 +365,7 @@ router.post('/patient/submitData/loader', function(req,res){   //Patient Submitt
 router.post('/patients/create', function(req,res){   //Create a Patient from Web Portal
 	var sugar = bcrypt.genSaltSync(circularSalt);
 	var genID = bcrypt.hashSync(req.body.data.emrid, sugar); // Used for messages
-	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.data.emrid+"','"+req.body.data.providerid+"','"+req.body.data.managerid+"')";
+	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid, messagecount) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.data.emrid+"','"+req.body.data.providerid+"','"+req.body.data.managerid+"',0)";
 	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, flag, steps, exercisetime, gameification,providerid,networkid) VALUES " +
 				"('" + req.body.data.firstname + 
 				"','" +req.body.data.lastname +
@@ -383,15 +384,7 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 				"','" +req.body.data.exercisetime +
 				"','0','" + req.body.data.providerid +
 				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC"+"')";
-	var regVal = Math.floor(Math.random()*90000) + 10000;			
-	new tempAuth({
-		userEmail: req.body.data.patientEmail,
-		tempID: regVal,
-		networkID: '$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',
-		userType: 'Patient'
-	}).save(function(err,res){
-		if(err) throw err;
-	});
+	
 	pgbae.connect(function(err,client,done){
 		if(err){
 			return console.error('error connecting client to pool: '+ err);
@@ -416,14 +409,30 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		client.release(); 
 	});   
 
+	
+	var regVal = Math.floor(Math.random()*90000) + 10000;			
+	new tempAuth({
+		bcrypt.genSalt(circularSalt,function(err,salt){
+			bcrypt.hash(regVal,salt, function(err,hash){
+				userEmail: req.body.data.patientEmail,
+				password: hash,
+				networkID: '$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',
+				userType: 'Patient',
+				deviceID: ''
+			}).save(function(err,res){
+				if(err) throw err;
+				console.log('User Registration submitted');
+			});
+		});
+	});
+		
 	const mailOptions = {
 	    from: '"HeartLink Registration" <heartlinkucf@gmail.com>', // sender address
 	    to: req.body.patientEmail, // list of receivers
 	    subject: 'Welcome to HeartLink', // Subject line
-	    text: 'Hello and Welcome to HeartLink! Please use Registration Code '+regVal+' to create an account. ', // plaintext body
-	    html: '<b>Hello and Welcome to HeartLink! Please use Registration Code'+regVal+' to create an account.</b>' // html body
-	};
-
+	    text: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ', // plaintext body
+	    html: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ' // html body
+	};	
 	transporter.sendMail(mailOptions, function(error, info){
 	    if(error){
 	        return console.log(error);
@@ -555,6 +564,7 @@ router.post('/messages',function(req,res){ // Get a conversation with a patient
 							var conversationID;
 							client.query("SELECT * FROM public.messages WHERE patientid = ($1)",[req.body.id],function(err,res){
 								if(err) throw err; 
+								if(res=)
 								return callback(null,res.rows[0].convoid,res.rows[0]);
 							});
 							client.release();
