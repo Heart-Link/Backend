@@ -533,9 +533,13 @@ router.post('/messages/patient/send',function(req,res){
 			console.log('message posted error');
 		}
 		client.query('SELECT convoid FROM public.patients WHERE emrid = ($1)',[req.body.emrid], function(err,result){
+			if(err) throw err;
 			client.query('INSERT INTO public.messagecontent (convoid,message,messengerid,timestamp) VALUES ($1,$2,$3,$4)',[result.rows[0].convoid, req.body.message, req.body.emrid, moment().format()]);
 		});
-		client.query('UPDATE public.patients SET messagecount = messagecount + 1 WHERE emrid = ($1)',[req.body.emrid]);
+		client.query('UPDATE public.patients SET messagecount = messagecount + 1 WHERE emrid = ($1)',[req.body.emrid],function(err,response){
+			if(err) throw err;
+			console.log(res);
+		});
 	});
 	res.status(200).json("Message Posted");	
 });
@@ -549,7 +553,7 @@ router.post('/messages/id',function(req,res){  // Send a Message from Web Portal
 				if(err) throw err;	
 			});
 		});
-		client.query('UPDATE public.patients SET messagecount = messagecount + 1 WHERE emrid = ($1)',[req.body.emrid]);
+		client.query('UPDATE public.patients SET messagecount = messagecount + 1 WHERE emrid = ($1)',[req.body.id]);
 	});
 
 	
