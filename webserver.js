@@ -365,12 +365,13 @@ router.post('/patient/submitData/loader', function(req,res){   //Patient Submitt
 router.post('/patients/create', function(req,res){   //Create a Patient from Web Portal
 	var sugar = bcrypt.genSaltSync(circularSalt);
 	var genID = bcrypt.hashSync(req.body.data.emrid, sugar); // Used for messages
-	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid, messagecount) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.data.emrid+"','"+req.body.data.providerid+"','"+req.body.data.managerid+"',0)";
-	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, flag, steps, exercisetime, gameification,providerid,networkid) VALUES " +
+	var convo = "INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ('$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC','"+genID+"','"+req.body.data.emrid+"','"+req.body.data.providerid+"','"+req.body.data.managerid+"')";
+	var statement = "INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, vitalsbpm, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, flag, steps,messagecount, exercisetime, gameification, providerid, networkid) VALUES " +
 				"('" + req.body.data.firstname + 
 				"','" +req.body.data.lastname +
 				"','" +req.body.data.vitalsbph +
 				"','" +req.body.data.vitalsbpl +
+				"','" +req.body.data.vitalsbpm+
 				"','" +req.body.data.weight +
 				"','" +req.body.data.vitalsalcohol +
 				"','" +req.body.data.status +
@@ -381,8 +382,9 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 				"','" +req.body.data.gender +
 				"','" +"false"+
 				"','" +req.body.data.steps +
+				"','" + 0 + 
 				"','" +req.body.data.exercisetime +
-				"','0','" + req.body.data.providerid +
+				"',0,'" + req.body.data.providerid +
 				"','$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC"+"')";
 	
 	pgbae.connect(function(err,client,done){
