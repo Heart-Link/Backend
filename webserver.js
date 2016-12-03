@@ -364,7 +364,7 @@ router.post('/patient/submitData/loader', function(req,res){   //Patient Submitt
 });
 router.post('/patients/create', function(req,res){   //Create a Patient from Web Portal
 	var sugar = bcrypt.genSaltSync(circularSalt);
-	var genID = bcrypt.hashSync(req.body.emrid, sugar); // Used for messages
+	var genID = bcrypt.hashSync(req.body.data.emrid, sugar); // Used for messages
 	
 	
 	pgbae.connect(function(err,client,done){
@@ -410,7 +410,7 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		
 	const mailOptions = {
 	    from: '"HeartLink Registration" <heartlinkucf@gmail.com>', // sender address
-	    to: req.body.patientEmail, // list of receivers
+	    to: req.body.data.patientEmail, // list of receivers
 	    subject: 'Welcome to HeartLink', // Subject line
 	    text: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ', // plaintext body
 	    html: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ' // html body
