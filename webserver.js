@@ -14,7 +14,12 @@ const config = require('./config');
 const helper = require('./helper'); 
 const apn = require('apn'); 
 const nodemailer = require('nodemailer'); 
-const transporter = nodemailer.createTransport('smtps://heartlinkucf@gmail.com:SeniorDesign@smtp.gmail.com');
+var ses = require('nodemailer-ses-transport');
+//const transporter = nodemailer.createTransport('smtps://heartlinkucf@gmail.com:SeniorDesign@smtp.gmail.com');
+var transporter = nodemailer.createTransport(ses({
+    accessKeyId: 'AKIAJWZC24YYHV4OP4BQ',
+    secretAccessKey: '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'
+}));
 const jwt = require('jsonwebtoken');
 
 app.use(bodyparser.urlencoded({ extended: true}));
@@ -409,7 +414,7 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 	});
 		
 	const mailOptions = {
-	    from: '"HeartLink Registration" <heartlinkucf@gmail.com>', // sender address
+	    from: '"HeartLink Registration (Do Not Reply)" <noreply@heartlink.com>', // sender address
 	    to: req.body.data.patientEmail, // list of receivers
 	    subject: 'Welcome to HeartLink', // Subject line
 	    text: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ', // plaintext body

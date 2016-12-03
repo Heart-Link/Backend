@@ -28,6 +28,7 @@
     "moment": "^2.14.1",
     "mongodb": "^1.4.40",
     "nodemailer": "^2.6.4",
+    "nodemailer-ses-transport": "^1.5.0",
     "pg": "^6.1.0",
     "postgresql": "0.0.1",
     "sql": "^0.70.1"
