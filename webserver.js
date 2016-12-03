@@ -413,19 +413,20 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		});
 	});
 		
-	const mailOptions = {
-	    from: '"HeartLink Registration (Do Not Reply)" <heartlinkucf@gmail.com>', // sender address
-	    to: req.body.data.patientEmail, // list of receivers
-	    subject: 'Welcome to HeartLink', // Subject line
-	    text: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ', // plaintext body
-	    html: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ' // html body
-	};	
-	transporter.sendMail(mailOptions, function(error, info){
-	    if(error){
-	        return console.log(error);
-	    }
-	    console.log('Message sent: ' + info.response);
-	});
+	// const mailOptions = {
+	//     from: '"HeartLink Registration (Do Not Reply)" <heartlinkucf@gmail.com>', // sender address
+	//     to: req.body.data.patientEmail, // list of receivers
+	//     subject: 'Welcome to HeartLink', // Subject line
+	//     text: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ', // plaintext body
+	//     html: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ' // html body
+	// };	
+	// transporter.sendMail(mailOptions, function(error, info){
+	//     if(error){
+	//         return console.log(error);
+	//     }
+	//     console.log('Message sent: ' + info.response);
+	// });
+	res.sendStatus(200);
 });
 router.post('/patients/update', function(req,res){ // Update a Patient from Web Portal
 	pgbae.connect(function(err,client,done){
