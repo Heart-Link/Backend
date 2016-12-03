@@ -309,6 +309,8 @@ router.get('/patientList:id:doc',function(req,res){  // Get list of Patients bas
 });
 router.post('/patient/submitData', function(req,res){   //Patient Submitting Daily Entry from their iPhone
 	helper.runAnalysis(req.body).then(function(score){
+		console.log(req.body);
+		console.log(score);
 		var entry = new patientEntry({
 			patientID : req.body.patientID,
 			entryInfo : req.body.entryInfo,
