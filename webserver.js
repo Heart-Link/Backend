@@ -373,16 +373,16 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		}
 		var providerName,
 			mangerName;
-		client.query("INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, vitalsbpm, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, flag, steps,messagecount, exercisetime, gameification, providerid, networkid, dob) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)", [req.body.firstname,req.body.lastname,req.body.vitalsbph,req.body.vitalsbpl,req.body.vitalsbpm,req.body.weight,req.body.vitalsalcohol,req.body.status,'$2a$10$4WibxkKEhSdgzO5Rjxs2quc19X2VclWR8dTJS2/B9judle.Xx/1yy',genID,req.body.emrid,req.body.patientemail,req.body.gender,"false",req.body.steps,0,req.body.exercisetime,0,req.body.providerid,'$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC', req.body.data.dob],function(err,result){ // send Create Patient Command
+		client.query("INSERT INTO public.patients (firstname, lastname, vitalsbph, vitalsbpl, vitalsbpm, weight, vitalsalcohol, status, managerid, convoid, emrid, patientemail, gender, flag, steps,messagecount, exercisetime, gameification, providerid, networkid, dob) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)", [req.body.data.firstname,req.body.data.lastname,req.body.data.vitalsbph,req.body.data.vitalsbpl,req.body.data.vitalsbpm,req.body.data.weight,req.body.data.vitalsalcohol,req.body.data.status,'$2a$10$4WibxkKEhSdgzO5Rjxs2quc19X2VclWR8dTJS2/B9judle.Xx/1yy',genID,req.body.data.emrid,req.body.data.patientemail,req.body.data.gender,"false",req.body.data.steps,0,req.body.data.exercisetime,0,req.body.data.providerid,'$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC', req.body.data.dob],function(err,result){ // send Create Patient Command
 			if(err) throw err;
 		});
-		client.query("INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ($1,$2,$3,$4,$5)", ['$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',genID, req.body,emrid, '$2a$10$TZpIaiZLQT6bbTaoVe21neDAxqEworSqsw9QdK9LH3Rty6ZAY1JJy','$2a$10$4WibxkKEhSdgzO5Rjxs2quc19X2VclWR8dTJS2/B9judle.Xx/1yy'], function(err,result){ // SEND create Message Command
+		client.query("INSERT INTO public.messages (networkid, convoid, patientid, providerid, managerid) VALUES ($1,$2,$3,$4,$5)", ['$2a$10$mm6Gn/Jw6TEmhlxtXsWQvuJV8U7AwjBE/hhz8a503Fo4xFAoEAPmC',genID, req.body.data.emrid, '$2a$10$TZpIaiZLQT6bbTaoVe21neDAxqEworSqsw9QdK9LH3Rty6ZAY1JJy','$2a$10$4WibxkKEhSdgzO5Rjxs2quc19X2VclWR8dTJS2/B9judle.Xx/1yy'], function(err,result){ // SEND create Message Command
 			if(err) throw err;
 			console.log(result);
 		});
-		client.query('SELECT lastname FROM public.employees WHERE providerid = ($1)', [req.body.providerid], function(err,result){
+		client.query('SELECT lastname FROM public.employees WHERE providerid = ($1)', ['$2a$10$TZpIaiZLQT6bbTaoVe21neDAxqEworSqsw9QdK9LH3Rty6ZAY1JJy'], function(err,result){
 			if(err) throw err;
-			client.query('UPDATE public.patients SET providername = ($1) WHERE emrid = ($2)',[result.rows[0].lastname, req.body.emrid], function(err,final){
+			client.query('UPDATE public.patients SET providername = ($1) WHERE emrid = ($2)',[result.rows[0].lastname, req.body.data.emrid], function(err,final){
 				if(err) throw err;
 				console.log('party');
 			})
