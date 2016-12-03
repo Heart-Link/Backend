@@ -414,7 +414,7 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 	});
 		
 	const mailOptions = {
-	    from: '"HeartLink Registration (Do Not Reply)" <noreply@heartlink.com>', // sender address
+	    from: '"HeartLink Registration (Do Not Reply)" <heartlinkucf@gmail.com>', // sender address
 	    to: req.body.data.patientEmail, // list of receivers
 	    subject: 'Welcome to HeartLink', // Subject line
 	    text: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ', // plaintext body
