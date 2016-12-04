@@ -15,7 +15,7 @@ const helper = require('./helper');
 const apn = require('apn'); 
 const nodemailer = require('nodemailer'); 
 var ses = require('nodemailer-ses-transport');
-const transporter = nodemailer.createTransport('smtps://heartlinkucf@gmail.com:SeniorDesign@smtp.gmail.com');
+const transporter = nodemailer.createTransport('smtps://heartlinkucf%40gmail.com:SeniorDesign@smtp.gmail.com');
 // var transporter = nodemailer.createTransport(ses({
 //     accessKeyId: 'AKIAJWZC24YYHV4OP4BQ',
 //     secretAccessKey: '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'
@@ -47,7 +47,13 @@ mongoose.connect(config.mongo);
 // };
 
 // const apnProvider = new apn.Provider(options);
-
+transporter.verify(function(error, success) {
+   if (error) {
+        console.log(error);
+   } else {
+        console.log('Server is ready to take our messages');
+   }
+});
 app.get('/test', function(req,res){
 	const mailOptions = {
 		    from: '"HeartLink"<heartlinkucf@gmail.com>', // sender address
