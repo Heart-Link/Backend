@@ -37,36 +37,31 @@ const tempAuth = require('./models/tempAuth.js');
 const pgbae = new Pool(config.postgresConfig);
 mongoose.connect(config.mongo);
 
-var options = {
-	token: {
-		key: 'APNsAuthKey_2A74WX86H2.p8',
-		keyId: '2A74WX86H2', 
-		teamId: '9NTVF3V67K'
-	},
-	production: false
-};
+// var options = {
+// 	token: {
+// 		key: 'APNsAuthKey_2A74WX86H2.p8',
+// 		keyId: '2A74WX86H2', 
+// 		teamId: '9NTVF3V67K'
+// 	},
+// 	production: false
+// };
 
-const apnProvider = new apn.Provider(options);
+// const apnProvider = new apn.Provider(options);
 
 app.get('/test', function(req,res){
-	var note = new apn.Notification();
-
-	note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
-	note.badge = 3;
-	note.sound = "ping.aiff";
-	note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
-	note.payload = {'id': 123};
-	note.topic = "Pickering.HeartLink";
-	var token = "fecc4ecebffd3f1dc745732b4101907154ab766eeede9e4c1da29bec2b15971d";
-
-
-	apnProvider.send(note, token).then((result) => {
-	  	console.log(result);
-	  	console.log(result.failed);
-	  	apnProvider.shutdown();
+const mailOptions = {
+	    from: 'heartlinkucf@gmail.com', // sender address
+	    to: req.body.patientEmail, // reciever address
+	    subject: 'Welcome to HeartLink', // Subject line
+	    text: 'Hello and Welcome to HeartLink! Please use this number as your password SMILE to log into an account. ', // plaintext body
+	    html: 'Hello and Welcome to HeartLink! Please use this number as your password SMILE to log into an account. ' // html body
+	};	
+	transporter.sendMail(mailOptions, function(error, info){
+	    if(error){
+	        return console.log(error);
+	    }
+	    console.log('Message sent: ' + info.response);
 	});
-
-	console.log("hi");
 });
 //-------------------------------------------|
 //-------------------------------------------|
@@ -372,8 +367,6 @@ router.post('/patient/submitData/loader', function(req,res){   //Patient Submitt
 router.post('/patients/create', function(req,res){   //Create a Patient from Web Portal
 	var sugar = bcrypt.genSaltSync(circularSalt);
 	var genID = bcrypt.hashSync(req.body.data.emrid, sugar); // Used for messages
-	
-	
 	pgbae.connect(function(err,client,done){
 		if(err){
 			return console.error('error connecting client to pool: '+ err);
@@ -415,19 +408,19 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 		});
 	});
 		
-	// const mailOptions = {
-	//     from: '"HeartLink Registration (Do Not Reply)" <heartlinkucf@gmail.com>', // sender address
-	//     to: req.body.data.patientEmail, // list of receivers
-	//     subject: 'Welcome to HeartLink', // Subject line
-	//     text: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ', // plaintext body
-	//     html: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ' // html body
-	// };	
-	// transporter.sendMail(mailOptions, function(error, info){
-	//     if(error){
-	//         return console.log(error);
-	//     }
-	//     console.log('Message sent: ' + info.response);
-	// });
+	const mailOptions = {
+	    from: 'heartlinkucf@gmail.com', // sender address
+	    to: req.body.data.patientEmail, // reciever address
+	    subject: 'Welcome to HeartLink', // Subject line
+	    text: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ', // plaintext body
+	    html: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ' // html body
+	};	
+	transporter.sendMail(mailOptions, function(error, info){
+	    if(error){
+	        return console.log(error);
+	    }
+	    console.log('Message sent: ' + info.response);
+	});
 	res.sendStatus(200);
 });
 router.post('/patients/update', function(req,res){ // Update a Patient from Web Portal
