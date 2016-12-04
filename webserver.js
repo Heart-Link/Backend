@@ -49,19 +49,19 @@ mongoose.connect(config.mongo);
 // const apnProvider = new apn.Provider(options);
 
 app.get('/test', function(req,res){
-const mailOptions = {
-	    from: 'heartlinkucf@gmail.com', // sender address
-	    to: req.body.patientEmail, // reciever address
-	    subject: 'Welcome to HeartLink', // Subject line
-	    text: 'Hello and Welcome to HeartLink! Please use this number as your password SMILE to log into an account. ', // plaintext body
-	    html: 'Hello and Welcome to HeartLink! Please use this number as your password SMILE to log into an account. ' // html body
-	};	
-	transporter.sendMail(mailOptions, function(error, info){
-	    if(error){
-	        return console.log(error);
-	    }
-	    console.log('Message sent: ' + info.response);
-	});
+	const mailOptions = {
+		    from: 'heartlinkucf@gmail.com', // sender address
+		    to: req.body.patientEmail, // reciever address
+		    subject: 'Welcome to HeartLink', // Subject line
+		    text: 'Hello and Welcome to HeartLink! Please use this number as your password SMILE to log into an account. ', // plaintext body
+		    html: 'Hello and Welcome to HeartLink! Please use this number as your password SMILE to log into an account. ' // html body
+		};	
+		transporter.sendMail(mailOptions, function(error, info){
+		    if(error){
+		        return console.log(error);
+		    }
+		    console.log('Message sent: ' + info.response);
+		});
 });
 //-------------------------------------------|
 //-------------------------------------------|
