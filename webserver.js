@@ -47,13 +47,6 @@ mongoose.connect(config.mongo);
 // };
 
 // const apnProvider = new apn.Provider(options);
-transporter.verify(function(error, success) {
-   if (error) {
-        console.log(error);
-   } else {
-        console.log('Server is ready to take our messages');
-   }
-});
 app.get('/test', function(req,res){
 	const mailOptions = {
 		    from: '"HeartLink"<heartlinkucf@gmail.com>', // sender address
@@ -606,7 +599,7 @@ router.post('/messages/mobile',function(req,res){ // Get a conversation with a p
 						 	if(err){
 						 		console.log('get Message error: '+ err)
 						 	}
-						 	client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1)",[convoID],function(err,data){
+						 	client.query("SELECT * FROM public.messagecontent WHERE convoid = ($1) ORDER BY id ASC",[convoID],function(err,data){
 						 		res.json(data.rows); 
 						 	});
 						 	client.release();
