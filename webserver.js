@@ -15,11 +15,11 @@ const helper = require('./helper');
 const apn = require('apn'); 
 const nodemailer = require('nodemailer'); 
 var ses = require('nodemailer-ses-transport');
-//const transporter = nodemailer.createTransport('smtps://heartlinkucf@gmail.com:SeniorDesign@smtp.gmail.com');
-var transporter = nodemailer.createTransport(ses({
-    accessKeyId: 'AKIAJWZC24YYHV4OP4BQ',
-    secretAccessKey: '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'
-}));
+const transporter = nodemailer.createTransport('smtps://heartlinkucf@gmail.com:SeniorDesign@smtp.gmail.com');
+// var transporter = nodemailer.createTransport(ses({
+//     accessKeyId: 'AKIAJWZC24YYHV4OP4BQ',
+//     secretAccessKey: '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'
+// }));
 const jwt = require('jsonwebtoken');
 
 app.use(bodyparser.urlencoded({ extended: true}));
@@ -50,7 +50,7 @@ mongoose.connect(config.mongo);
 
 app.get('/test', function(req,res){
 	const mailOptions = {
-		    from: 'heartlinkucf@gmail.com', // sender address
+		    from: '"HeartLink"<heartlinkucf@gmail.com>', // sender address
 		    to: 'sd.mistry1121@gmail.com', // reciever address
 		    subject: 'Welcome to HeartLink', // Subject line
 		    text: 'Hello and Welcome to HeartLink! Please use this number as your password SMILE to log into an account. ', // plaintext body
