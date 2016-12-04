@@ -51,7 +51,7 @@ mongoose.connect(config.mongo);
 app.get('/test', function(req,res){
 	const mailOptions = {
 		    from: 'heartlinkucf@gmail.com', // sender address
-		    to: req.body.patientEmail, // reciever address
+		    to: 'sd.mistry1121@gmail.com', // reciever address
 		    subject: 'Welcome to HeartLink', // Subject line
 		    text: 'Hello and Welcome to HeartLink! Please use this number as your password SMILE to log into an account. ', // plaintext body
 		    html: 'Hello and Welcome to HeartLink! Please use this number as your password SMILE to log into an account. ' // html body
