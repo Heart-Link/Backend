@@ -16,10 +16,6 @@ const apn = require('apn');
 const nodemailer = require('nodemailer'); 
 var ses = require('nodemailer-ses-transport');
 const transporter = nodemailer.createTransport('smtps://heartlinkucf%40gmail.com:SeniorDesign@smtp.gmail.com');
-// var transporter = nodemailer.createTransport(ses({
-//     accessKeyId: 'AKIAJWZC24YYHV4OP4BQ',
-//     secretAccessKey: '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'
-// }));
 const jwt = require('jsonwebtoken');
 
 app.use(bodyparser.urlencoded({ extended: true}));
@@ -386,7 +382,6 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 				console.log('party');
 			})
 		})
-		res.status(200).json("Patient Added Successfully"); 
 		client.release(); 
 	});   
 
@@ -406,21 +401,7 @@ router.post('/patients/create', function(req,res){   //Create a Patient from Web
 				});
 		});
 	});
-		
-	const mailOptions = {
-	    from: 'heartlinkucf@gmail.com', // sender address
-	    to: req.body.data.patientEmail, // reciever address
-	    subject: 'Welcome to HeartLink', // Subject line
-	    text: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ', // plaintext body
-	    html: 'Hello and Welcome to HeartLink! Please use this number as your password '+regVal+' to log into an account. ' // html body
-	};	
-	transporter.sendMail(mailOptions, function(error, info){
-	    if(error){
-	        return console.log(error);
-	    }
-	    console.log('Message sent: ' + info.response);
-	});
-	res.sendStatus(200);
+	res.status(200).json("Patient Added Successfully"); 
 });
 router.post('/patients/update', function(req,res){ // Update a Patient from Web Portal
 	pgbae.connect(function(err,client,done){
